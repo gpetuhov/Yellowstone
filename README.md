@@ -1,2 +1,2 @@
 # Yellowstone
-Yellowstone Caldera Monitor
+Yellowstone Caldera monitor for Android
