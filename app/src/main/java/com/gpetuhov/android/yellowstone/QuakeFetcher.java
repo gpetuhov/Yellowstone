@@ -1,5 +1,6 @@
 package com.gpetuhov.android.yellowstone;
 
+import android.net.Uri;
 import android.util.Log;
 
 import java.io.IOException;
@@ -14,6 +15,14 @@ public class QuakeFetcher {
 
     // Tag for log messages
     private static final String LOG_TAG = QuakeFetcher.class.getName();
+
+    // USGS URL for queries
+    public static final String USGS_QUERY_URL = "http://earthquake.usgs.gov/fdsnws/event/1/query";
+
+    // Caldera location on map
+    public static final String CALDERA_LATITUDE = "44.5";       // Latitude of the center of caldera (degrees)
+    public static final String CALDERA_LONGITUDE = "-110.6";    // Longitude of the center of caldera (degrees)
+    public static final String CALDERA_RADIUS = "40";           // Radius of caldera (in kilometers)
 
     public String getJsonString(String requestedUrl) {
 
@@ -47,7 +56,20 @@ public class QuakeFetcher {
 
     // Build request URL with specified parameters
     public String buildRequestUrl() {
-        return "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2014-01-01&endtime=2014-01-02&minmagnitude=5";
+
+        // For USGS query parameters see http://earthquake.usgs.gov/fdsnws/event/1/
+
+        // Default query: last 30 days, magnitude >= 2
+        final String defaultUrl = Uri.parse(USGS_QUERY_URL)
+                .buildUpon()
+                .appendQueryParameter("format", "geojson")  // Response format = GeoJSON
+                .appendQueryParameter("latitude", CALDERA_LATITUDE)     // Latitude of caldera
+                .appendQueryParameter("longitude", CALDERA_LONGITUDE)   // Longitude of caldera
+                .appendQueryParameter("maxradiuskm", CALDERA_RADIUS)    // Radius of caldera
+                .appendQueryParameter("minmagnitude", "2")  // Minimum magnitude = 2
+                .build().toString();
+
+        return defaultUrl;
     }
 
 }
