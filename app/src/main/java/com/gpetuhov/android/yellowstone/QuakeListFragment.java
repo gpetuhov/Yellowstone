@@ -20,6 +20,12 @@ public class QuakeListFragment extends Fragment {
     private QuakeAdapter mAdapter;              // Adapter for RecyclerView
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);    // Fragment is not destroyed when device is rotated (need to be removed later)
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
