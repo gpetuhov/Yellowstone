@@ -23,6 +23,9 @@ public class QuakeListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);    // Fragment is not destroyed when device is rotated (need to be removed later)
+
+        // Fetch list of earthquakes from USGS server in background thread
+        new FetchQuakesTask().execute();
     }
 
     @Override

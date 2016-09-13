@@ -13,7 +13,7 @@ import okhttp3.Response;
 public class QuakeFetcher {
 
     // Tag for log messages
-    private static final String LOG_TAG = QuakeFetcher.class.getSimpleName();
+    private static final String LOG_TAG = QuakeFetcher.class.getName();
 
     public String getJsonString(String requestedUrl) {
 
