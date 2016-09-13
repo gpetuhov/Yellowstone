@@ -5,6 +5,4 @@
     <string name="category_quakes">Quakes</string>
     <string name="category_map">Map</string>
     <string name="category_photos">Photos</string>
-
-    <string name="quakelist_fragment_text">Quake List Fragment</string>
 </resources>
