@@ -5,4 +5,8 @@
     <string name="category_quakes">Quakes</string>
     <string name="category_map">Map</string>
     <string name="category_photos">Photos</string>
+
+    <!--Placeholder text for fragments-->
+    <string name="map_fragment_text">Map Fragment</string>
+    <string name="photo_list_fragment_text">Photo List Fragment</string>
 </resources>
