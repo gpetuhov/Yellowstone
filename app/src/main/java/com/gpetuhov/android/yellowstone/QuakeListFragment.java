@@ -1,6 +1,7 @@
 package com.gpetuhov.android.yellowstone;
 
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,8 +17,11 @@ import java.util.List;
 // Fragment contains list of earthquakes
 public class QuakeListFragment extends Fragment {
 
-    private RecyclerView mQuakeRecyclerView;    // RecyclerView for list of quakes
-    private QuakeAdapter mAdapter;              // Adapter for RecyclerView
+    // RecyclerView for the list of earthquakes
+    private RecyclerView mQuakeRecyclerView;
+
+    // Empty list for the list of earthquakes
+    private List<Quake> mQuakes = new ArrayList<>();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -41,15 +45,21 @@ public class QuakeListFragment extends Fragment {
         // Set LinearLayoutManager for our RecyclerView (we need vertical scroll list)
         mQuakeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        updateUI();
+        // Set adapter for our RecyclerView
+        setupAdapter();
 
         return v;
     }
 
     // Set adapter for our RecyclerView
-    private void updateUI() {
-        mAdapter = new QuakeAdapter();
-        mQuakeRecyclerView.setAdapter(mAdapter);
+    private void setupAdapter() {
+
+        // If the fragment is added to a parent activity,
+        // create new adapter with list of quakes stored in mQuakes
+        // and set it as adapter for the RecyclerView
+        if (isAdded()) {
+            mQuakeRecyclerView.setAdapter(new QuakeAdapter(mQuakes));
+        }
     }
 
 
@@ -58,12 +68,17 @@ public class QuakeListFragment extends Fragment {
     // ViewHolder for our RecyclerView with list of earthquakes
     private class QuakeHolder extends RecyclerView.ViewHolder {
 
-        public TextView mTitleTextView; // Text for one list row
+        // TextView for the location of the earthquake
+        public TextView mLocationTextView;
 
         public QuakeHolder(View itemView) {
             super(itemView);
+            mLocationTextView = (TextView) itemView; // In our test code itemView is one line of text. This will change later
+        }
 
-            mTitleTextView = (TextView) itemView; // In our test code itemView is one line of text. This will change later
+        public void bindQuake(Quake quake) {
+            // Get location from the Quake object and display it in TextView
+            mLocationTextView.setText(quake.getLocation());
         }
     }
 
@@ -71,15 +86,11 @@ public class QuakeListFragment extends Fragment {
     // Adapter for our RecyclerView with list of earthquakes
     private class QuakeAdapter extends RecyclerView.Adapter<QuakeHolder> {
 
-        private List<String> mQuakes;   // Stores list of earthquakes
+        // Empty list for the list of earthquakes
+        private List<Quake> mItems;
 
-        // In constructor we create simple list of strings for test purpose
-        public QuakeAdapter() {
-            mQuakes = new ArrayList<>();
-
-            for (int i = 0; i < 100; i++) {
-                mQuakes.add("Quake " + i);
-            }
+        public QuakeAdapter(List<Quake> items) {
+            mItems = items;
         }
 
         @Override
@@ -97,16 +108,38 @@ public class QuakeListFragment extends Fragment {
         @Override
         public void onBindViewHolder(QuakeHolder holder, int position) {
             // Get earthquake at "position" from list of quakes
-            String quake = mQuakes.get(position);
+            Quake quake = mItems.get(position);
 
             // Set ViewHolder of list item according to earthquake at "position"
-            holder.mTitleTextView.setText(quake);
+            holder.bindQuake(quake);
         }
 
         @Override
         public int getItemCount() {
             // Return size of list of earthquakes
-            return mQuakes.size();
+            return mItems.size();
+        }
+    }
+
+
+    // Background thread for fetching list of earthquakes from request URL
+    private class FetchQuakesTask extends AsyncTask<Void, Void, List<Quake>> {
+
+        @Override
+        protected List<Quake> doInBackground(Void... params) {
+
+            // Create new QuakeFetcher object and return result of its fetchQuakes method
+            return new QuakeFetcher().fetchQuakes();
+        }
+
+        @Override
+        protected void onPostExecute(List<Quake> quakes) {
+
+            // Store list of quakes fetched from USGS server in mQuakes field of QuakeListFragment
+            mQuakes = quakes;
+
+            // Create new adapter for RecyclerView with new list of quakes
+            setupAdapter();
         }
     }
 
