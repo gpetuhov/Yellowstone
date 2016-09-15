@@ -120,6 +120,8 @@ public class QuakeListFragment extends Fragment {
     private class QuakeHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
 
+        private Quake mQuake;
+
         // TextView for the magnitude of the earthquake
         public TextView mMagnitudeTextView;
 
@@ -142,14 +144,18 @@ public class QuakeListFragment extends Fragment {
         }
 
         public void bindQuake(Quake quake) {
+
+            // Store quake object in private field
+            mQuake = quake;
+
             // Get magnitude from the Quake object and display it in TextView
-            mMagnitudeTextView.setText(quake.getFormattedMagnitude());
+            mMagnitudeTextView.setText(mQuake.getFormattedMagnitude());
 
             // Get location from the Quake object and display it in TextView
-            mLocationTextView.setText(quake.getLocation());
+            mLocationTextView.setText(mQuake.getLocation());
 
             // Get date from the Quake object and display it in TextView
-            mDateTextView.setText(quake.getFormattedDate());
+            mDateTextView.setText(mQuake.getFormattedDate());
         }
 
         // Handle clicks on list items
@@ -157,7 +163,7 @@ public class QuakeListFragment extends Fragment {
         public void onClick(View v) {
 
             // Create explicit intent to start activity with details of the earthquake
-            Intent intent = new Intent(getActivity(), QuakeActivity.class);
+            Intent intent = QuakeActivity.newIntent(getActivity(), mQuake.getId());
 
             // Start activity with details of the earthquake
             startActivity(intent);

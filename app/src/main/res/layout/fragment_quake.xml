@@ -6,8 +6,8 @@
 
     <!--Placeholder text-->
     <TextView
+        android:id="@+id/quake_id_text_view"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/quake_fragment_text"/>
+        android:layout_height="wrap_content"/>
 
 </LinearLayout>
