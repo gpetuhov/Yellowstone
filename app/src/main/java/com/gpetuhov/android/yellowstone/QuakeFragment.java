@@ -18,8 +18,8 @@ public class QuakeFragment extends Fragment {
     // Stores details of earthquake to display
     private Quake mQuake;
 
-    // TextView for earthquake ID
-    private TextView mQuakeIdTextView;
+    // TextView for earthquake location
+    private TextView mQuakeLocationTextView;
 
     // Return new instance of this fragment and attach arguments to it
     public static QuakeFragment newInstance(String quakeId) {
@@ -46,8 +46,9 @@ public class QuakeFragment extends Fragment {
         // Get earthquake ID from the fragment's arguments
         String quakeID = getArguments().getString(ARG_QUAKE_ID);
 
-        // Store earthquake details in a new Quake object
-        mQuake = new Quake(quakeID, 0, "", 0, "", 0, 0, 0);
+        // Get earthquake with received ID from QuakeLab
+        // and store it mQuake field
+        mQuake = QuakeLab.get(getActivity()).getQuake(quakeID);
     }
 
     @Override
@@ -57,11 +58,11 @@ public class QuakeFragment extends Fragment {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_quake, container, false);
 
-        // Get access to TextView for earthquake ID
-        mQuakeIdTextView = (TextView) v.findViewById(R.id.quake_id_text_view);
+        // Get access to TextView for earthquake location
+        mQuakeLocationTextView = (TextView) v.findViewById(R.id.quake_location_text_view);
 
-        // Display earthquake ID
-        mQuakeIdTextView.setText(mQuake.getId());
+        // Display earthquake location
+        mQuakeLocationTextView.setText(mQuake.getLocation());
 
         return v;
     }

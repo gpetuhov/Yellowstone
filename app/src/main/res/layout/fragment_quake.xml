@@ -4,9 +4,9 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <!--Placeholder text-->
+    <!--Displays location of the earthquake-->
     <TextView
-        android:id="@+id/quake_id_text_view"
+        android:id="@+id/quake_location_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
