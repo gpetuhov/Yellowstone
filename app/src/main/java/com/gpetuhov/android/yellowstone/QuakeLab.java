@@ -3,6 +3,9 @@ package com.gpetuhov.android.yellowstone;
 
 import android.content.Context;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 // Currently this class is not used
 // For future purposes
@@ -12,11 +15,11 @@ import android.content.Context;
 // so that there can be only one instance of this class
 public class QuakeLab {
 
-    // Link to the instance of the class
+    // Reference to the instance of the class
     private static QuakeLab sQuakeLab;
 
-    public QuakeLab(Context context) {
-    }
+    // Stores list of earthquakes
+    private List<Quake> mQuakes;
 
     // Return link to QuakeLab instance
     public static QuakeLab get(Context context) {
@@ -27,6 +30,37 @@ public class QuakeLab {
         }
 
         return sQuakeLab;
+    }
+
+    public QuakeLab(Context context) {
+        // Create new empty list to store earthquakes
+        mQuakes = new ArrayList<>();
+    }
+
+    // Return list of earthquakes
+    public List<Quake> getQuakes() {
+        return mQuakes;
+    }
+
+    // Set new list of earthquakes
+    public void setQuakes(List<Quake> quakes) {
+        mQuakes = quakes;
+    }
+
+    // Return Quake object with specified ID
+    public Quake getQuake(String quakeId) {
+
+        // For each earthquake in the list check if ID equals specified ID
+        // If true, return current earthquake
+        for (Quake quake : mQuakes) {
+            if (quake.getId().equals(quakeId)) {
+                return quake;
+            }
+        }
+
+        // There is no earthquake with specified ID in the list
+        // Nothing to return
+        return null;
     }
 
 }

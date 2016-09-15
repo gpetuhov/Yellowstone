@@ -15,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 // Fragment contains list of earthquakes
@@ -26,9 +25,6 @@ public class QuakeListFragment extends Fragment {
 
     // Empty view text (displayed when there is no data for RecyclerView)
     private TextView mEmptyView;
-
-    // Empty list for the list of earthquakes
-    private List<Quake> mQuakes = new ArrayList<>();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -104,11 +100,15 @@ public class QuakeListFragment extends Fragment {
     // Set adapter for our RecyclerView
     private void setupAdapter() {
 
-        // If the fragment is added to a parent activity,
-        // create new adapter with list of quakes stored in mQuakes
-        // and set it as adapter for the RecyclerView
+        // If the fragment is added to a parent activity
         if (isAdded()) {
-            mQuakeRecyclerView.setAdapter(new QuakeAdapter(mQuakes));
+
+            // Get list of quakes from QuakeLab
+            List<Quake> quakes = QuakeLab.get(getActivity()).getQuakes();
+
+            // Create new adapter with this list of quakes
+            // and set it as adapter for the RecyclerView
+            mQuakeRecyclerView.setAdapter(new QuakeAdapter(quakes));
         }
     }
 
@@ -223,8 +223,8 @@ public class QuakeListFragment extends Fragment {
         @Override
         protected void onPostExecute(List<Quake> quakes) {
 
-            // Store list of quakes fetched from USGS server in mQuakes field of QuakeListFragment
-            mQuakes = quakes;
+            // Replace list in QuakeLab with quakes fetched from USGS server
+            QuakeLab.get(getActivity()).setQuakes(quakes);
 
             // Create new adapter for RecyclerView with new list of quakes
             setupAdapter();
