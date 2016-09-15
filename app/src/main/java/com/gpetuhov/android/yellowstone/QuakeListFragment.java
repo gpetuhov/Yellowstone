@@ -1,6 +1,9 @@
 package com.gpetuhov.android.yellowstone;
 
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -20,16 +23,42 @@ public class QuakeListFragment extends Fragment {
     // RecyclerView for the list of earthquakes
     private RecyclerView mQuakeRecyclerView;
 
+    // Empty view text (displayed when there is no data for RecyclerView)
+    private TextView mEmptyView;
+
     // Empty list for the list of earthquakes
     private List<Quake> mQuakes = new ArrayList<>();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);    // Fragment is not destroyed when device is rotated (need to be removed later)
 
-        // Fetch list of earthquakes from USGS server in background thread
-        new FetchQuakesTask().execute();
+        // Fragment must not be destroyed when device is rotated
+        // Because we use AsyncTask to fetch data
+        setRetainInstance(true);
+
+        // If there is a network connection, fetch data
+        if (isNetworkAvailableAndConnected()) {
+            // Fetch list of earthquakes from USGS server in background thread
+            new FetchQuakesTask().execute();
+        }
+
+    }
+
+    // Return "true" if network is available and connected
+    private boolean isNetworkAvailableAndConnected() {
+
+        // Get a reference to the ConnectivityManager to check state of network connectivity
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        // Get details on the currently active default data network
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+        // True if network is available and connected
+        boolean isNetworkConnected = networkInfo != null && networkInfo.isConnected();
+
+        return isNetworkConnected;
     }
 
     @Override
@@ -45,8 +74,28 @@ public class QuakeListFragment extends Fragment {
         // Set LinearLayoutManager for our RecyclerView (we need vertical scroll list)
         mQuakeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        // Set adapter for our RecyclerView
-        setupAdapter();
+        // Get access to TextView for empty view
+        mEmptyView = (TextView) v.findViewById(R.id.empty_view);
+
+        // If there is a network connection, display RecyclerView with data from USGS server
+        if (isNetworkAvailableAndConnected()) {
+            // Display RecyclerView
+            mQuakeRecyclerView.setVisibility(View.VISIBLE);
+
+            // Hide empty view
+            mEmptyView.setVisibility(View.GONE);
+
+            // Set adapter for RecyclerView
+            setupAdapter();
+        } else {
+            // Otherwise, display error
+
+            // Hide RecyclerView
+            mQuakeRecyclerView.setVisibility(View.GONE);
+
+            // Display empty view
+            mEmptyView.setVisibility(View.VISIBLE);
+        }
 
         return v;
     }
