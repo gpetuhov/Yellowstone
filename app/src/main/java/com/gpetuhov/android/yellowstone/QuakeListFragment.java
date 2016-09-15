@@ -68,17 +68,33 @@ public class QuakeListFragment extends Fragment {
     // ViewHolder for our RecyclerView with list of earthquakes
     private class QuakeHolder extends RecyclerView.ViewHolder {
 
+        // TextView for the magnitude of the earthquake
+        public TextView mMagnitudeTextView;
+
         // TextView for the location of the earthquake
         public TextView mLocationTextView;
 
+        // TextView for the date of the earthquake
+        public TextView mDateTextView;
+
         public QuakeHolder(View itemView) {
             super(itemView);
-            mLocationTextView = (TextView) itemView; // In our test code itemView is one line of text. This will change later
+
+            // Get access to TextViews in itemView
+            mMagnitudeTextView = (TextView) itemView.findViewById(R.id.magnitude);
+            mLocationTextView = (TextView) itemView.findViewById(R.id.location);
+            mDateTextView = (TextView) itemView.findViewById(R.id.date);
         }
 
         public void bindQuake(Quake quake) {
+            // Get magnitude from the Quake object and display it in TextView
+            mMagnitudeTextView.setText(quake.getFormattedMagnitude());
+
             // Get location from the Quake object and display it in TextView
             mLocationTextView.setText(quake.getLocation());
+
+            // Get date from the Quake object and display it in TextView
+            mDateTextView.setText(quake.getFormattedDate());
         }
     }
 
@@ -99,7 +115,7 @@ public class QuakeListFragment extends Fragment {
             LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
 
             // Create view for one list item from item layout
-            View view = layoutInflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+            View view = layoutInflater.inflate(R.layout.list_item_quake, parent, false);
 
             // Create ViewHolder with inflated view for one list item
             return new QuakeHolder(view);

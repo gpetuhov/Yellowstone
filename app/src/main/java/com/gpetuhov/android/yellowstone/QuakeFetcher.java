@@ -43,7 +43,6 @@ public class QuakeFetcher {
                 .appendQueryParameter("latitude", CALDERA_LATITUDE)     // Latitude of caldera
                 .appendQueryParameter("longitude", CALDERA_LONGITUDE)   // Longitude of caldera
                 .appendQueryParameter("maxradiuskm", CALDERA_RADIUS)    // Radius of caldera
-                .appendQueryParameter("minmagnitude", "2")  // Minimum magnitude = 2
                 .build().toString();
 
         return defaultUrl;

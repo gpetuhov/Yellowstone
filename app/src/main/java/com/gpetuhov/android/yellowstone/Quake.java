@@ -1,5 +1,9 @@
 package com.gpetuhov.android.yellowstone;
 
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 // Stores information about one earthquake
 public class Quake {
 
@@ -79,4 +83,22 @@ public class Quake {
         return mDepth;
     }
 
+    public String getFormattedMagnitude() {
+        DecimalFormat magnitudeFormat = new DecimalFormat("0.0");
+        return magnitudeFormat.format(mMagnitude);
+    }
+
+    public String getFormattedDate() {
+        // Create a new Date object from the time in milliseconds of the earthquake
+        Date dateObject = new Date(mTimeInMilliseconds);
+
+        // Create date format (ex. 2016-09-15 09:42:22)
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+        // Format Date object to string
+        String dateString = dateFormat.format(dateObject) + " (UTC)";
+
+        // Return date string
+        return dateString;
+    }
 }
