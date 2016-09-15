@@ -83,11 +83,13 @@ public class Quake {
         return mDepth;
     }
 
+    // Return magnitude in String format
     public String getFormattedMagnitude() {
         DecimalFormat magnitudeFormat = new DecimalFormat("0.0");
         return magnitudeFormat.format(mMagnitude);
     }
 
+    // Return date in String format
     public String getFormattedDate() {
         // Create a new Date object from the time in milliseconds of the earthquake
         Date dateObject = new Date(mTimeInMilliseconds);
@@ -100,5 +102,23 @@ public class Quake {
 
         // Return date string
         return dateString;
+    }
+
+    // Return depth in String format
+    public String getFormattedDepth() {
+        DecimalFormat depthFormat = new DecimalFormat("0.0");
+        return depthFormat.format(mDepth);
+    }
+
+    // Return latitude in String format
+    public String getFormattedLatitude() {
+        DecimalFormat latitudeFormat = new DecimalFormat("0.000");
+        return latitudeFormat.format(mLatitude);
+    }
+
+    // Return longitude in String format
+    public String getFormattedLongitude() {
+        DecimalFormat longitudeFormat = new DecimalFormat("0.000");
+        return longitudeFormat.format(mLongitude);
     }
 }

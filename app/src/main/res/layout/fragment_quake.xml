@@ -1,13 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <!--Displays location of the earthquake-->
+    <!--Location-->
     <TextView
         android:id="@+id/quake_location_text_view"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:padding="4dp"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:text="5 km NE of Old Faithful"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!--Magnitude-->
+            <TextView
+                android:id="@+id/quake_magnitude_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="4dp"
+                android:textSize="16sp"
+                tools:text="Magnitude 2.5"/>
+
+            <!--Depth-->
+            <TextView
+                android:id="@+id/quake_depth_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="4dp"
+                android:textSize="16sp"
+                tools:text="Depth 5.0 km"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:orientation="vertical">
+
+            <!--Date-->
+            <TextView
+                android:id="@+id/quake_date_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="4dp"
+                android:textSize="16sp"
+                tools:text="2016-09-15 03:55:20 UTC"/>
+
+            <!--Coordinates-->
+            <TextView
+                android:id="@+id/quake_coordinates_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="4dp"
+                android:textSize="16sp"
+                tools:text="38.665°N   97.441°W"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>
