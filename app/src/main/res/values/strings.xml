@@ -15,5 +15,6 @@
     <!--Placeholder text for fragments-->
     <string name="map_fragment_text">Map Fragment</string>
     <string name="photo_list_fragment_text">Photo List Fragment</string>
+    <string name="quake_fragment_text">Quake details</string>
 
 </resources>

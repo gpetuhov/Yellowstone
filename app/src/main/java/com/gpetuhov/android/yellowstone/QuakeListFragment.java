@@ -2,6 +2,7 @@ package com.gpetuhov.android.yellowstone;
 
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -115,7 +116,9 @@ public class QuakeListFragment extends Fragment {
     // === Inner classes =====================
 
     // ViewHolder for our RecyclerView with list of earthquakes
-    private class QuakeHolder extends RecyclerView.ViewHolder {
+    // Our ViewHolder implements View.OnClickListener to handle clicks on list items
+    private class QuakeHolder extends RecyclerView.ViewHolder
+            implements View.OnClickListener {
 
         // TextView for the magnitude of the earthquake
         public TextView mMagnitudeTextView;
@@ -128,6 +131,9 @@ public class QuakeListFragment extends Fragment {
 
         public QuakeHolder(View itemView) {
             super(itemView);
+
+            // Our class handles clicks on list items by itself
+            itemView.setOnClickListener(this);
 
             // Get access to TextViews in itemView
             mMagnitudeTextView = (TextView) itemView.findViewById(R.id.magnitude);
@@ -144,6 +150,17 @@ public class QuakeListFragment extends Fragment {
 
             // Get date from the Quake object and display it in TextView
             mDateTextView.setText(quake.getFormattedDate());
+        }
+
+        // Handle clicks on list items
+        @Override
+        public void onClick(View v) {
+
+            // Create explicit intent to start activity with details of the earthquake
+            Intent intent = new Intent(getActivity(), QuakeActivity.class);
+
+            // Start activity with details of the earthquake
+            startActivity(intent);
         }
     }
 
