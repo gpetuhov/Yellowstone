@@ -25,12 +25,6 @@ public class QuakeFetcher {
     // USGS URL for queries
     public static final String USGS_QUERY_URL = "http://earthquake.usgs.gov/fdsnws/event/1/query";
 
-    // Caldera location on map
-    public static final String CALDERA_LATITUDE = "44.5";       // Latitude of the center of caldera (degrees)
-    public static final String CALDERA_LONGITUDE = "-110.6";    // Longitude of the center of caldera (degrees)
-    public static final String CALDERA_RADIUS = "40";           // Radius of caldera (in kilometers)
-
-
     // Build request URL to USGS server with specified parameters
     public String buildRequestUrl() {
 
@@ -40,9 +34,9 @@ public class QuakeFetcher {
         final String defaultUrl = Uri.parse(USGS_QUERY_URL)
                 .buildUpon()
                 .appendQueryParameter("format", "geojson")  // Response format = GeoJSON
-                .appendQueryParameter("latitude", CALDERA_LATITUDE)     // Latitude of caldera
-                .appendQueryParameter("longitude", CALDERA_LONGITUDE)   // Longitude of caldera
-                .appendQueryParameter("maxradiuskm", CALDERA_RADIUS)    // Radius of caldera
+                .appendQueryParameter("latitude", QuakeUtils.CALDERA_LATITUDE)     // Latitude of caldera
+                .appendQueryParameter("longitude", QuakeUtils.CALDERA_LONGITUDE)   // Longitude of caldera
+                .appendQueryParameter("maxradiuskm", QuakeUtils.CALDERA_RADIUS)    // Radius of caldera
                 .build().toString();
 
         return defaultUrl;

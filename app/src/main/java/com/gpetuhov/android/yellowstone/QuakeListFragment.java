@@ -120,6 +120,7 @@ public class QuakeListFragment extends Fragment {
     private class QuakeHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
 
+        // Stores earthquake for this ViewHolder
         private Quake mQuake;
 
         // TextView for the magnitude of the earthquake

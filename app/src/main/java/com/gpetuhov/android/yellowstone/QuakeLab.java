@@ -32,7 +32,7 @@ public class QuakeLab {
         return sQuakeLab;
     }
 
-    public QuakeLab(Context context) {
+    private QuakeLab(Context context) {
         // Create new empty list to store earthquakes
         mQuakes = new ArrayList<>();
     }

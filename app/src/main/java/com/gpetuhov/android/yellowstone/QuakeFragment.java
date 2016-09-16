@@ -8,6 +8,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MarkerOptions;
+
 
 // Fragment displays details of earthquake
 public class QuakeFragment extends Fragment {
@@ -32,6 +41,12 @@ public class QuakeFragment extends Fragment {
 
     // TextView for earthquake coordinates
     private TextView mQuakeCoordinatesTextView;
+
+    // Reference to Google Map
+    private GoogleMap mGoogleMap;
+
+    // Reference to MapView that displays Google Map
+    private MapView mMapView;
 
     // Return new instance of this fragment and attach arguments to it
     public static QuakeFragment newInstance(String quakeId) {
@@ -100,7 +115,128 @@ public class QuakeFragment extends Fragment {
         // Display earthquake coordinates
         mQuakeCoordinatesTextView.setText(mQuake.getFormattedLatitude() + ", " + mQuake.getFormattedLongitude());
 
+
+        // Get access to MapView for displaying map with the earthquake
+        mMapView = (MapView) v.findViewById(R.id.quake_detail_mapview);
+
+        // Callback must be forwarded for prover MapView lifecycle
+        mMapView.onCreate(savedInstanceState);
+
+        // Get access to Google Map displayed in MapView
+        // Reference to Google Map is returned asynchronously, when the map is ready,
+        // and is passed to OnMapReadyCallback listener,
+        // in which we override onMapReady method to save returned reference to the map.
+        mMapView.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap googleMap) {
+                // When the map is ready, return reference to it
+                mGoogleMap = googleMap;
+
+                // When the map is loaded, update it with new camera position and the marker of the earthquake.
+                // To do this, we must set OnMapLoadedCallback listener for the map
+                // and override its onMapLoaded method.
+                mGoogleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+                    @Override
+                    public void onMapLoaded() {
+                        updateMap();
+                    }
+                });
+            }
+        });
+
         return v;
     }
 
+    // Updates map with bounds including Caldera and point of the earthquake
+    private void updateMap() {
+
+        // Do nothing, if map is not ready
+        if (mGoogleMap == null) {
+            return;
+        }
+
+        // Coordinates of Caldera
+        double calderaLat = QuakeUtils.getCalderaLatDouble();
+        double calderaLng = QuakeUtils.getCalderaLngDouble();
+
+        // Shifts from Caldera to include on map
+        double latShift = 0.5;
+        double lngShift = 0.6;
+
+        // North shift from Caldera
+        LatLng northOfCaldera = new LatLng(calderaLat + latShift, calderaLng);
+
+        // South shift from Caldera
+        LatLng southOfCaldera = new LatLng(calderaLat - latShift, calderaLng);
+
+        // West shift from Caldera
+        LatLng westOfCaldera = new LatLng(calderaLat, calderaLng - lngShift);
+
+        // East shift from Caldera
+        LatLng eastOfCaldera = new LatLng(calderaLat, calderaLng + lngShift);
+
+        // Point of the earthquake
+        LatLng pointOfQuake = new LatLng(mQuake.getLatitude(), mQuake.getLongitude());
+
+        // Build marker for the point of the earthquake
+        MarkerOptions quakeMarker = new MarkerOptions()
+                .position(pointOfQuake);
+
+        // Clear map and add marker for the earthquake
+        mGoogleMap.clear();
+        mGoogleMap.addMarker(quakeMarker);
+
+        // Build bounds including all of the above points
+        LatLngBounds bounds = new LatLngBounds.Builder()
+                .include(northOfCaldera)
+                .include(southOfCaldera)
+                .include(westOfCaldera)
+                .include(eastOfCaldera)
+                .include(pointOfQuake)
+                .build();
+
+        // Get map margin size from XML
+        int margin = getResources().getDimensionPixelSize(R.dimen.map_inset_margin);
+
+        // Build camera update with the bounds built above and map margins
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, margin);
+
+        // Move camera to the update built above
+        mGoogleMap.moveCamera(cameraUpdate);
+    }
+
+    // Callback must be forwarded for prover MapView lifecycle
+    @Override
+    public void onResume() {
+        super.onResume();
+        mMapView.onResume();
+    }
+
+    // Callback must be forwarded for prover MapView lifecycle
+    @Override
+    public void onPause() {
+        super.onPause();
+        mMapView.onPause();
+    }
+
+    // Callback must be forwarded for prover MapView lifecycle
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mMapView.onDestroy();
+    }
+
+    // Callback must be forwarded for prover MapView lifecycle
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        mMapView.onSaveInstanceState(outState);
+    }
+
+    // Callback must be forwarded for prover MapView lifecycle
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        mMapView.onLowMemory();
+    }
 }

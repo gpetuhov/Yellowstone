@@ -2,8 +2,15 @@
 <manifest package="com.gpetuhov.android.yellowstone"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--Permission to access internet. Needed in our app and also by Google Maps-->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!--Permission to access network state.
+        Needed to check internet availability and also by Google Maps-->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!--Permission to write data to external storage. Needed by Google Maps-->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -12,6 +19,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!--Key for Google Maps API-->
+        <meta-data
+            android:name="com.google.android.maps.v2.API_KEY"
+            android:value="AIzaSyBut_7f4-HvwlJJKoXTNf9j40J66sDHKn4"/>
+
+        <!--Main activity. Starts from launcher-->
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -20,6 +33,7 @@
             </intent-filter>
         </activity>
 
+        <!--Earthquake detail activity-->
         <activity
             android:name=".QuakeActivity"
             android:parentActivityName=".MainActivity">
