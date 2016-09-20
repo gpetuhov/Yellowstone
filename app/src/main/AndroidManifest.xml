@@ -35,7 +35,7 @@
 
         <!--Earthquake detail activity-->
         <activity
-            android:name=".QuakeActivity"
+            android:name=".QuakePagerActivity"
             android:parentActivityName=".MainActivity">
         </activity>
 

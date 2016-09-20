@@ -164,7 +164,7 @@ public class QuakeListFragment extends Fragment {
         public void onClick(View v) {
 
             // Create explicit intent to start activity with details of the earthquake
-            Intent intent = QuakeActivity.newIntent(getActivity(), mQuake.getId());
+            Intent intent = QuakePagerActivity.newIntent(getActivity(), mQuake.getId());
 
             // Start activity with details of the earthquake
             startActivity(intent);
