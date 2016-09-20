@@ -8,14 +8,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 
 // Fragment displays details of earthquake
@@ -45,7 +40,10 @@ public class QuakeFragment extends Fragment {
     // Reference to Google Map
     private GoogleMap mGoogleMap;
 
-    // Reference to MapView that displays Google Map
+    // Reference to MapView that displays Google Map.
+    // We must use MapView instead of MapFragment, because here map occupies only part of the screen.
+    // For proper functioning of MapView we must forward callback, that manage its lifecycle
+    // (onCreate(), onResume() etc.)
     private MapView mMapView;
 
     // Return new instance of this fragment and attach arguments to it
@@ -132,77 +130,22 @@ public class QuakeFragment extends Fragment {
                 // When the map is ready, return reference to it
                 mGoogleMap = googleMap;
 
+                // Enable zoom buttons
+                mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
+
                 // When the map is loaded, update it with new camera position and the marker of the earthquake.
                 // To do this, we must set OnMapLoadedCallback listener for the map
                 // and override its onMapLoaded method.
                 mGoogleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
                     @Override
                     public void onMapLoaded() {
-                        updateMap();
+                        QuakeUtils.updateMap(getActivity(), mGoogleMap, mQuake);
                     }
                 });
             }
         });
 
         return v;
-    }
-
-    // Updates map with bounds including Caldera and point of the earthquake
-    private void updateMap() {
-
-        // Do nothing, if map is not ready
-        if (mGoogleMap == null) {
-            return;
-        }
-
-        // Coordinates of Caldera
-        double calderaLat = QuakeUtils.getCalderaLatDouble();
-        double calderaLng = QuakeUtils.getCalderaLngDouble();
-
-        // Shifts from Caldera to include on map
-        double latShift = 0.5;
-        double lngShift = 0.6;
-
-        // North shift from Caldera
-        LatLng northOfCaldera = new LatLng(calderaLat + latShift, calderaLng);
-
-        // South shift from Caldera
-        LatLng southOfCaldera = new LatLng(calderaLat - latShift, calderaLng);
-
-        // West shift from Caldera
-        LatLng westOfCaldera = new LatLng(calderaLat, calderaLng - lngShift);
-
-        // East shift from Caldera
-        LatLng eastOfCaldera = new LatLng(calderaLat, calderaLng + lngShift);
-
-        // Point of the earthquake
-        LatLng pointOfQuake = new LatLng(mQuake.getLatitude(), mQuake.getLongitude());
-
-        // Build marker for the point of the earthquake
-        MarkerOptions quakeMarker = new MarkerOptions()
-                .position(pointOfQuake);
-
-        // Clear map and add marker for the earthquake
-        mGoogleMap.clear();
-        mGoogleMap.addMarker(quakeMarker);
-
-        // Build bounds including all of the above points
-        LatLngBounds bounds = new LatLngBounds.Builder()
-                .include(northOfCaldera)
-                .include(southOfCaldera)
-                .include(westOfCaldera)
-                .include(eastOfCaldera)
-                .include(pointOfQuake)
-                .build();
-
-        // Get map margin size from XML
-        int margin = getResources().getDimensionPixelSize(R.dimen.map_inset_margin);
-
-        // Build camera update with the bounds built above and map margins
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, margin);
-
-        // Move camera to the update built above
-        mGoogleMap.moveCamera(cameraUpdate);
     }
 
     // Callback must be forwarded for prover MapView lifecycle

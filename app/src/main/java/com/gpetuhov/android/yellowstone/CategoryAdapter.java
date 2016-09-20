@@ -25,7 +25,7 @@ public class CategoryAdapter extends FragmentPagerAdapter {
         if (position == 0) {
             return new QuakeListFragment();
         } else if (position == 1) {
-            return new MapFragment();
+            return new QuakeMapFragment();
         } else {
             return new PhotoListFragment();
         }
