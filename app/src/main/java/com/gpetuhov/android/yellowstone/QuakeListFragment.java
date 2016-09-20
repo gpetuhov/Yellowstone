@@ -5,9 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -20,6 +21,9 @@ import java.util.List;
 // Fragment contains list of earthquakes
 public class QuakeListFragment extends Fragment {
 
+    // Loader ID
+    public static final int QUAKE_LOADER_ID = 1;
+
     // RecyclerView for the list of earthquakes
     private RecyclerView mQuakeRecyclerView;
 
@@ -30,14 +34,35 @@ public class QuakeListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Fragment must not be destroyed when device is rotated
-        // Because we use AsyncTask to fetch data
-        setRetainInstance(true);
-
         // If there is a network connection, fetch data
         if (isNetworkAvailableAndConnected()) {
-            // Fetch list of earthquakes from USGS server in background thread
-            new FetchQuakesTask().execute();
+
+            // Get reference to the LoaderManager
+            LoaderManager loaderManager = getActivity().getSupportLoaderManager();
+
+            // Initialize loader and create new LoaderCallbacks object that manages loader lifecycle
+            loaderManager.initLoader(QUAKE_LOADER_ID, null, new LoaderManager.LoaderCallbacks<List<Quake>>() {
+
+                // Returns new loader
+                @Override
+                public Loader<List<Quake>> onCreateLoader(int id, Bundle args) {
+                    return new QuakeLoader(getActivity());
+                }
+
+                // When load is finished, saves the fetched data and updates UI
+                @Override
+                public void onLoadFinished(Loader<List<Quake>> loader, List<Quake> data) {
+                    // Replace list in QuakeLab with quakes fetched from USGS server
+                    QuakeLab.get(getActivity()).setQuakes(data);
+
+                    // Create new adapter for RecyclerView with new list of quakes
+                    setupAdapter();
+                }
+
+                @Override
+                public void onLoaderReset(Loader<List<Quake>> loader) {
+                }
+            });
         }
 
     }
@@ -207,28 +232,6 @@ public class QuakeListFragment extends Fragment {
         public int getItemCount() {
             // Return size of list of earthquakes
             return mItems.size();
-        }
-    }
-
-
-    // Background thread for fetching list of earthquakes from request URL
-    private class FetchQuakesTask extends AsyncTask<Void, Void, List<Quake>> {
-
-        @Override
-        protected List<Quake> doInBackground(Void... params) {
-
-            // Create new QuakeFetcher object and return result of its fetchQuakes method
-            return new QuakeFetcher().fetchQuakes();
-        }
-
-        @Override
-        protected void onPostExecute(List<Quake> quakes) {
-
-            // Replace list in QuakeLab with quakes fetched from USGS server
-            QuakeLab.get(getActivity()).setQuakes(quakes);
-
-            // Create new adapter for RecyclerView with new list of quakes
-            setupAdapter();
         }
     }
 
