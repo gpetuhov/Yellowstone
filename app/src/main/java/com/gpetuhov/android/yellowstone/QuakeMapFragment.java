@@ -29,10 +29,15 @@ public class QuakeMapFragment extends SupportMapFragment {
                 // Enable zoom buttons
                 mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
 
-                // Update map with all earthquakes from QuakeLab.
-                // Here we may not specifically wait for map to be loaded,
-                // because we use SupportMapFragment.
-                QuakeUtils.updateMap(getActivity(), mGoogleMap, null);
+                // When the map is loaded, update it with all earthquakes from QuakeLab.
+                // To do this, we must set OnMapLoadedCallback listener for the map
+                // and override its onMapLoaded method.
+                mGoogleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+                    @Override
+                    public void onMapLoaded() {
+                        QuakeUtils.updateMap(getActivity(), mGoogleMap, null);
+                    }
+                });
             }
         });
     }

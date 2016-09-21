@@ -2,10 +2,10 @@ package com.gpetuhov.android.yellowstone;
 
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -18,8 +18,11 @@ import android.widget.TextView;
 
 import java.util.List;
 
-// Fragment contains list of earthquakes
-public class QuakeListFragment extends Fragment {
+// Fragment contains list of earthquakes.
+// Host of this fragment must implement its Callbacks interface
+// and set itself as a listener for the callbacks.
+public class QuakeListFragment extends Fragment
+        implements LoaderManager.LoaderCallbacks<List<Quake>> {
 
     // Loader ID
     public static final int QUAKE_LOADER_ID = 1;
@@ -30,9 +33,27 @@ public class QuakeListFragment extends Fragment {
     // Empty view text (displayed when there is no data for RecyclerView)
     private TextView mEmptyView;
 
+    // Stores reference to a host that uses this fragment
+    // Host must implement Callbacks interface
+    private Callbacks mCallbacks;
+
+    // This interface must be implemented by the host (activity or parent fragment) that uses this fragment
+    public interface Callbacks {
+        // The host must override this method
+        void onQuakeSelected(Quake quake);
+    }
+
+    // Host that uses this fragment must call this method and pass reference to itself
+    // to be registered as a listener that implements Callbacks interface.
+    public void setOnQuakeSelectedListener(Callbacks host) {
+        // Save reference to the host
+        mCallbacks = host;
+    }
+
+    // Best practice to initialize a loader is in the fragment's onActivityCreated method
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
 
         // If there is a network connection, fetch data
         if (isNetworkAvailableAndConnected()) {
@@ -40,31 +61,12 @@ public class QuakeListFragment extends Fragment {
             // Get reference to the LoaderManager
             LoaderManager loaderManager = getActivity().getSupportLoaderManager();
 
-            // Initialize loader and create new LoaderCallbacks object that manages loader lifecycle
-            loaderManager.initLoader(QUAKE_LOADER_ID, null, new LoaderManager.LoaderCallbacks<List<Quake>>() {
-
-                // Returns new loader
-                @Override
-                public Loader<List<Quake>> onCreateLoader(int id, Bundle args) {
-                    return new QuakeLoader(getActivity());
-                }
-
-                // When load is finished, saves the fetched data and updates UI
-                @Override
-                public void onLoadFinished(Loader<List<Quake>> loader, List<Quake> data) {
-                    // Replace list in QuakeLab with quakes fetched from USGS server
-                    QuakeLab.get(getActivity()).setQuakes(data);
-
-                    // Create new adapter for RecyclerView with new list of quakes
-                    setupAdapter();
-                }
-
-                @Override
-                public void onLoaderReset(Loader<List<Quake>> loader) {
-                }
-            });
+            // Initialize loader and set this fragment as a listener for loader callbacks
+            // If the loader with the passed ID exists and the data is ready,
+            // initLoader immediately pushes data to onLoadFinished callback method.
+            // If not, loader is created and starts loading data.
+            loaderManager.initLoader(QUAKE_LOADER_ID, null, this);
         }
-
     }
 
     // Return "true" if network is available and connected
@@ -137,6 +139,27 @@ public class QuakeListFragment extends Fragment {
         }
     }
 
+    // Returns new loader
+    @Override
+    public Loader<List<Quake>> onCreateLoader(int id, Bundle args) {
+        return new QuakeLoader(getActivity());
+    }
+
+    // When load is finished, saves the fetched data and updates UI
+    @Override
+    public void onLoadFinished(Loader<List<Quake>> loader, List<Quake> data) {
+        // Replace list in QuakeLab with quakes fetched from USGS server
+        QuakeLab.get(getActivity()).setQuakes(data);
+
+        // Create new adapter for RecyclerView with new list of quakes
+        setupAdapter();
+    }
+
+    // Method is called when data from loader is no longer valid
+    @Override
+    public void onLoaderReset(Loader<List<Quake>> loader) {
+    }
+
 
     // === Inner classes =====================
 
@@ -187,12 +210,9 @@ public class QuakeListFragment extends Fragment {
         // Handle clicks on list items
         @Override
         public void onClick(View v) {
-
-            // Create explicit intent to start activity with details of the earthquake
-            Intent intent = QuakePagerActivity.newIntent(getActivity(), mQuake.getId());
-
-            // Start activity with details of the earthquake
-            startActivity(intent);
+            // Forward callback to the host, that uses this fragment, by calling its onQuakeSelected method.
+            // All real action is implemented by the host.
+            mCallbacks.onQuakeSelected(mQuake);
         }
     }
 

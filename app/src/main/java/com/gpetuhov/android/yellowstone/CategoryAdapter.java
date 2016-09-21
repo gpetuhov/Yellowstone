@@ -6,7 +6,9 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
 
-// Adapter for switching between fragments in ViewPager
+// Adapter for switching between fragments in ViewPager.
+// FragmentPagerAdapter keeps instances of fragments and does not remove them from memory,
+// so it is good for layouts with few tabs (about 3) for quick switching between tabs.
 public class CategoryAdapter extends FragmentPagerAdapter {
 
     // Context of the app
@@ -23,7 +25,7 @@ public class CategoryAdapter extends FragmentPagerAdapter {
     @Override
     public Fragment getItem(int position) {
         if (position == 0) {
-            return new QuakeListFragment();
+            return new QuakeMasterDetailFragment();
         } else if (position == 1) {
             return new QuakeMapFragment();
         } else {

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--Tablet layout for master fragment containing Quake Master/Detail flow-->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="horizontal"
+              android:divider="?android:dividerHorizontal"
+              android:showDividers="middle"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <!--Container for fragment with list of quakes-->
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                 android:id="@+id/fragment_quake_list_container"
+                 android:layout_width="0dp"
+                 android:layout_height="match_parent"
+                 android:layout_weight="1">
+    </FrameLayout>
+
+    <!--Container for fragment with details of quake-->
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                 android:id="@+id/fragment_quake_detail_container"
+                 android:layout_width="0dp"
+                 android:layout_height="match_parent"
+                 android:layout_weight="3">
+    </FrameLayout>
+
+</LinearLayout>

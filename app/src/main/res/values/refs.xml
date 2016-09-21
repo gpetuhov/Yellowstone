@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--Alias for Quake Master/Detail fragment (phone layout)-->
+
+<resources>
+    <item name="fragment_master_quake" type="layout">@layout/fragment_master_quake_phone</item>
+</resources>

@@ -55,6 +55,9 @@ public class QuakePagerActivity extends AppCompatActivity {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
         // Create new adapter and set it for the ViewPager
+        // FragmentStatePagerAdapter loads in advance only nearest fragments to the current one
+        // (total amount of loaded fragments is not more than 3),
+        // so it is good for displaying long lists.
         mViewPager.setAdapter(new FragmentStatePagerAdapter(fragmentManager) {
             @Override
             public Fragment getItem(int position) {
