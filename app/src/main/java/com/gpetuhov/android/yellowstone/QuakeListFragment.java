@@ -1,9 +1,6 @@
 package com.gpetuhov.android.yellowstone;
 
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -19,6 +16,7 @@ import android.widget.TextView;
 import java.util.List;
 
 // Fragment contains list of earthquakes.
+// This fragment implements LoaderManager callbacks to update UI with data from loader.
 // Host of this fragment must implement its Callbacks interface
 // and set itself as a listener for the callbacks.
 public class QuakeListFragment extends Fragment
@@ -56,7 +54,7 @@ public class QuakeListFragment extends Fragment
         super.onActivityCreated(savedInstanceState);
 
         // If there is a network connection, fetch data
-        if (isNetworkAvailableAndConnected()) {
+        if (QuakeUtils.isNetworkAvailableAndConnected(getActivity())) {
 
             // Get reference to the LoaderManager
             LoaderManager loaderManager = getActivity().getSupportLoaderManager();
@@ -67,22 +65,6 @@ public class QuakeListFragment extends Fragment
             // If not, loader is created and starts loading data.
             loaderManager.initLoader(QUAKE_LOADER_ID, null, this);
         }
-    }
-
-    // Return "true" if network is available and connected
-    private boolean isNetworkAvailableAndConnected() {
-
-        // Get a reference to the ConnectivityManager to check state of network connectivity
-        ConnectivityManager connMgr = (ConnectivityManager)
-                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        // Get details on the currently active default data network
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-
-        // True if network is available and connected
-        boolean isNetworkConnected = networkInfo != null && networkInfo.isConnected();
-
-        return isNetworkConnected;
     }
 
     @Override
@@ -102,7 +84,7 @@ public class QuakeListFragment extends Fragment
         mEmptyView = (TextView) v.findViewById(R.id.empty_view);
 
         // If there is a network connection, display RecyclerView with data from USGS server
-        if (isNetworkAvailableAndConnected()) {
+        if (QuakeUtils.isNetworkAvailableAndConnected(getActivity())) {
             // Display RecyclerView
             mQuakeRecyclerView.setVisibility(View.VISIBLE);
 

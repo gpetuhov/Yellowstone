@@ -2,6 +2,9 @@ package com.gpetuhov.android.yellowstone;
 
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -10,8 +13,13 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 // Utilities class
 public class QuakeUtils {
@@ -113,6 +121,53 @@ public class QuakeUtils {
 
         // Move camera to the update built above
         googleMap.moveCamera(cameraUpdate);
+    }
+
+    // Return "true" if network is available and connected
+    public static boolean isNetworkAvailableAndConnected(Context context) {
+
+        // Get a reference to the ConnectivityManager to check state of network connectivity
+        ConnectivityManager connMgr = (ConnectivityManager)
+                context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        // Get details on the currently active default data network
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+        // True if network is available and connected
+        boolean isNetworkConnected = networkInfo != null && networkInfo.isConnected();
+
+        return isNetworkConnected;
+    }
+
+    // Get JSON response from the requested URL
+    public static String getJsonString(String requestedUrl, String logTag) {
+
+        // Create new OkHttp client
+        OkHttpClient client = new OkHttpClient();
+
+        // Build new request from requested URL
+        Request request = new Request.Builder()
+                .url(requestedUrl)
+                .build();
+
+        String jsonResponse = null;  // String contains JSON response
+
+        Response response = null;   // OkHttp response
+
+        try {
+            // Get response from server
+            response = client.newCall(request).execute();
+            // Convert response to string
+            jsonResponse = response.body().string();
+        } catch (IOException e) {
+            // Nothing to return
+            Log.e(logTag, "Error fetching JSON string", e);
+            return null;
+        }
+
+        // Shutdown for OkHttp isn't necessary
+
+        return jsonResponse;
     }
 
 }

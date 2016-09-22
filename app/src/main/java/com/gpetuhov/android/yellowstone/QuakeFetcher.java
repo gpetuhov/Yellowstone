@@ -7,13 +7,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 
 // Fetches JSON string with list of earthquakes from requested URL
@@ -41,39 +36,6 @@ public class QuakeFetcher {
 
         return defaultUrl;
     }
-
-
-    // Get JSON response from the requested URL
-    public String getJsonString(String requestedUrl) {
-
-        // Create new OkHttp client
-        OkHttpClient client = new OkHttpClient();
-
-        // Build new request from requested URL
-        Request request = new Request.Builder()
-                .url(requestedUrl)
-                .build();
-
-        String jsonResponse = null;  // String contains JSON response
-
-        Response response = null;   // OkHttp response
-
-        try {
-            // Get response from server
-            response = client.newCall(request).execute();
-            // Convert response to string
-            jsonResponse = response.body().string();
-        } catch (IOException e) {
-            // Nothing to return
-            Log.e(LOG_TAG, "Error fetching JSON string", e);
-            return null;
-        }
-
-        // Shutdown for OkHttp isn't necessary
-
-        return jsonResponse;
-    }
-
 
     // Parse JSON response from USGS server
     public List<Quake> parseJsonString(String jsonString) {
@@ -153,7 +115,7 @@ public class QuakeFetcher {
         String requestURL = buildRequestUrl();
 
         // Get JSON response from USGS server
-        String jsonResponse = getJsonString(requestURL);
+        String jsonResponse = QuakeUtils.getJsonString(requestURL, LOG_TAG);
 
         // Parse JSON response and return list of earthquakes
         return parseJsonString(jsonResponse);
