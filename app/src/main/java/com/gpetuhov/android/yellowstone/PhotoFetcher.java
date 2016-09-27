@@ -80,6 +80,9 @@ public class PhotoFetcher {
                     // Extract photo URL and store it in PhotoListItem object
                     item.setUrl(photoJsonObject.getString("url_s"));
 
+                    // Extract photo owner and store it in PhotoListItem object
+                    item.setOwner(photoJsonObject.getString("owner"));
+
                     // Add PhotoListItem object to photo list
                     items.add(item);
                 }

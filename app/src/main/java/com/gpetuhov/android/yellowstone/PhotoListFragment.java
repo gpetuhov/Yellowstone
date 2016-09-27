@@ -1,5 +1,6 @@
 package com.gpetuhov.android.yellowstone;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -184,8 +185,11 @@ public class PhotoListFragment extends Fragment
         @Override
         public void onClick(View v) {
 
-            // TODO: Handle item clicks here
+            // Build photo webpage URl and create new intent for PhotoPageActivity with it
+            Intent intent = PhotoPageActivity.newIntent(getActivity(), mPhotoListItem.getPhotoPageUri());
 
+            // Start PhotoPageActivity with this intent
+            startActivity(intent);
         }
     }
 

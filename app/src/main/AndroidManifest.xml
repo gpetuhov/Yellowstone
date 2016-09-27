@@ -39,6 +39,15 @@
             android:parentActivityName=".MainActivity">
         </activity>
 
+        <!--Photo webpage activity-->
+        <activity
+            android:name=".PhotoPageActivity"
+            android:parentActivityName=".MainActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize">
+            <!--PhotoPageActivity is set to handle configuration changes itself-->
+            <!--This is needed for WebView not to reload webpages on orientation change-->
+        </activity>
+
     </application>
 
 </manifest>
