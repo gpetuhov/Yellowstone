@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--Arrays for magnitude settings-->
+
+    <!--Magnitude settings options-->
+    <string-array name="pref_magnitude_options">
+        <item>@string/pref_magnitude_label_all</item>
+        <item>@string/pref_magnitude_label_25</item>
+        <item>@string/pref_magnitude_label_45</item>
+    </string-array>
+
+    <!--Magnitude settings values-->
+    <string-array name="pref_magnitude_values">
+        <item>@string/pref_magnitude_value_1</item>
+        <item>@string/pref_magnitude_value_2</item>
+        <item>@string/pref_magnitude_value_3</item>
+    </string-array>
+
+</resources>

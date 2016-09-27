@@ -12,7 +12,32 @@
     <!--Empty view text-->
     <string name="no_internet_connection">No internet connection</string>
 
-    <!--Placeholder text for fragments-->
-    <string name="photo_list_fragment_text">Photo List Fragment</string>
+    <!--Settings text-->
+
+    <!--Minimum magnitude settings-->
+
+    <!--Title of minimum magnitude settings-->
+    <string name="pref_magnitude_label">Show earthquakes</string>
+
+    <!--Key for storing magnitude settings in SharedPreferences-->
+    <string name="pref_magnitude_key">min_magnitude</string>
+
+    <!--Text for all magnitudes-->
+    <string name="pref_magnitude_label_all">All magnitudes</string>
+
+    <!--Text for magnitudes 2.5+-->
+    <string name="pref_magnitude_label_25">Magnitude 2.5+</string>
+
+    <!--Text for magnitudes 4.5+-->
+    <string name="pref_magnitude_label_45">Magnitude 4.5+</string>
+
+    <!--Value for all magnitudes in SharedPreferences-->
+    <string name="pref_magnitude_value_1">1</string>
+
+    <!--Value for magnitudes 2.5+ in SharedPreferences-->
+    <string name="pref_magnitude_value_2">2</string>
+
+    <!--Value for magnitudes 4.5+ in SharedPreferences-->
+    <string name="pref_magnitude_value_3">3</string>
 
 </resources>

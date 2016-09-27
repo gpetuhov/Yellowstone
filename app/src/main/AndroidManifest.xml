@@ -48,6 +48,12 @@
             <!--This is needed for WebView not to reload webpages on orientation change-->
         </activity>
 
+        <!--Application settings activity-->
+        <activity
+            android:name=".SettingsActivity"
+            android:parentActivityName=".MainActivity">
+        </activity>
+
     </application>
 
 </manifest>

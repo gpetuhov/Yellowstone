@@ -1,5 +1,6 @@
 package com.gpetuhov.android.yellowstone;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.TabLayout;
@@ -95,11 +96,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
+        // Get selected item ID
         int id = item.getItemId();
 
+        // If user selected Settings item
         if (id == R.id.action_settings) {
 
-            // TODO: Specify action for Settings menu item here
+            // Create explicit intent to start settings activity
+            Intent intent = new Intent(this, SettingsActivity.class);
+
+            // Start settings activity
+            startActivity(intent);
 
             return true;
         }

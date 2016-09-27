@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--Layout for application preferences-->
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!--Minimum magnitude setting-->
+    <ListPreference
+        android:title="@string/pref_magnitude_label"
+        android:key="@string/pref_magnitude_key"
+        android:defaultValue="@string/pref_magnitude_value_1"
+        android:entries="@array/pref_magnitude_options"
+        android:entryValues="@array/pref_magnitude_values"/>
+
+</PreferenceScreen>
