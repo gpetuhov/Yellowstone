@@ -1,6 +1,9 @@
 package com.gpetuhov.android.yellowstone;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -20,12 +23,12 @@ public class QuakeFetcher {
     // USGS URL for queries
     public static final String USGS_QUERY_URL = "http://earthquake.usgs.gov/fdsnws/event/1/query";
 
-    // Build request URL to USGS server with specified parameters
-    public String buildRequestUrl() {
+    // Build default request URL to USGS server
+    public String buildDefaultRequestUrl() {
 
         // For USGS query parameters see http://earthquake.usgs.gov/fdsnws/event/1/
 
-        // Default query: last 30 days, magnitude >= 2
+        // Default query: last 30 days, all magnitudes
         final String defaultUrl = Uri.parse(USGS_QUERY_URL)
                 .buildUpon()
                 .appendQueryParameter("format", "geojson")  // Response format = GeoJSON
@@ -35,6 +38,31 @@ public class QuakeFetcher {
                 .build().toString();
 
         return defaultUrl;
+    }
+
+    // Build request URL to USGS server with specified parameters
+    public String buildRequestUrl(Context context) {
+
+        // Build default request URL
+        final String defaultUrl = buildDefaultRequestUrl();
+
+        // Get default SharedPreferences
+        SharedPreferences sharedPrefs =
+                PreferenceManager.getDefaultSharedPreferences(context);
+
+        // Get magnitude preference value from SharedPreference by the key
+        // (default value is value_1 (minimum magnitude = 0, that is all magnitudes)
+        String minMagnitude = sharedPrefs.getString(
+                context.getString(R.string.pref_magnitude_key),
+                context.getString(R.string.pref_magnitude_value_1));
+
+        // Build request URL upon default request URL
+        final String requestUrl = Uri.parse(defaultUrl)
+                .buildUpon()
+                .appendQueryParameter("minmagnitude", minMagnitude)  // Minimum magnitude
+                .build().toString();
+
+        return requestUrl;
     }
 
     // Parse JSON response from USGS server
@@ -109,10 +137,10 @@ public class QuakeFetcher {
 
 
     // Fetch list of earthquakes from USGS server
-    public List<Quake> fetchQuakes() {
+    public List<Quake> fetchQuakes(Context context) {
 
         // Build request URL (query to USGS server)
-        String requestURL = buildRequestUrl();
+        String requestURL = buildRequestUrl(context);
 
         // Get JSON response from USGS server
         String jsonResponse = QuakeUtils.getJsonString(requestURL, LOG_TAG);

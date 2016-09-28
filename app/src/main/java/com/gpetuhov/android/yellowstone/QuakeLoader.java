@@ -9,8 +9,13 @@ import java.util.List;
 // AsyncTaskLoader that fetches data from USGS server
 public class QuakeLoader extends AsyncTaskLoader<List<Quake>> {
 
+    private Context mContext;
+
     public QuakeLoader(Context context) {
         super(context);
+
+        // Save application context in the field (it is used in loadInBackground method)
+        mContext = context;
     }
 
     // Method is called, when LoaderManager's initLoader method is called
@@ -24,6 +29,6 @@ public class QuakeLoader extends AsyncTaskLoader<List<Quake>> {
     @Override
     public List<Quake> loadInBackground() {
         // Create new QuakeFetcher object and return result of its fetchQuakes method
-        return new QuakeFetcher().fetchQuakes();
+        return new QuakeFetcher().fetchQuakes(mContext);
     }
 }

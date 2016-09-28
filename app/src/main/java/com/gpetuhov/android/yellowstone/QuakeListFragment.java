@@ -2,7 +2,6 @@ package com.gpetuhov.android.yellowstone;
 
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -35,6 +34,7 @@ public class QuakeListFragment extends Fragment
     // Host must implement Callbacks interface
     private Callbacks mCallbacks;
 
+
     // This interface must be implemented by the host (activity or parent fragment) that uses this fragment
     public interface Callbacks {
         // The host must override this method
@@ -48,22 +48,22 @@ public class QuakeListFragment extends Fragment
         mCallbacks = host;
     }
 
-    // Best practice to initialize a loader is in the fragment's onActivityCreated method
+    // Best practice to initialize a loader is in the fragment's onActivityCreated method,
+    // but we do it in onResume, because we must reload data every time the fragment becomes visible
+    // (user may return from Settings after changing query parameters).
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    public void onResume() {
+        super.onResume();
 
-        // If there is a network connection, fetch data
+        // If there is a network connection
         if (QuakeUtils.isNetworkAvailableAndConnected(getActivity())) {
 
             // Get reference to the LoaderManager
             LoaderManager loaderManager = getActivity().getSupportLoaderManager();
 
-            // Initialize loader and set this fragment as a listener for loader callbacks
-            // If the loader with the passed ID exists and the data is ready,
-            // initLoader immediately pushes data to onLoadFinished callback method.
-            // If not, loader is created and starts loading data.
-            loaderManager.initLoader(QUAKE_LOADER_ID, null, this);
+            // Start new loader or restart existing (start loading data)
+            // and set this fragment as a listener for loader callbacks.
+            loaderManager.restartLoader(QUAKE_LOADER_ID, null, this);
         }
     }
 
@@ -120,6 +120,8 @@ public class QuakeListFragment extends Fragment
             mQuakeRecyclerView.setAdapter(new QuakeAdapter(quakes));
         }
     }
+
+    // LoaderManager callbacks
 
     // Returns new loader
     @Override

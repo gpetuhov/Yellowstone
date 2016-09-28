@@ -5,9 +5,9 @@
 
     <!--Magnitude settings options-->
     <string-array name="pref_magnitude_options">
-        <item>@string/pref_magnitude_label_all</item>
-        <item>@string/pref_magnitude_label_25</item>
-        <item>@string/pref_magnitude_label_45</item>
+        <item>@string/pref_magnitude_label_1</item>
+        <item>@string/pref_magnitude_label_2</item>
+        <item>@string/pref_magnitude_label_3</item>
     </string-array>
 
     <!--Magnitude settings values-->
