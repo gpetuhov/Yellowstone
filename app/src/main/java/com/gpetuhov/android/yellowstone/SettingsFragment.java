@@ -1,6 +1,7 @@
 package com.gpetuhov.android.yellowstone;
 
 import android.os.Bundle;
+import android.support.v7.preference.CheckBoxPreference;
 import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
@@ -73,10 +74,11 @@ public class SettingsFragment extends PreferenceFragmentCompat
                 preference.setSummary(listPreference.getEntries()[prefIndex]);
             }
 
-        } else {
+        } else if (preference instanceof CheckBoxPreference) {
+            // If the preference is instance of CheckBoxPreference (quake notifications settings)
 
-            // For other preferences, set the summary to the value's simple string representation.
-            preference.setSummary(stringValue);
+            // Set quake notifications service (start or stop depending on settings value)
+            QuakePollService.setServiceAlarm(getActivity());
         }
 
         return true;

@@ -65,8 +65,22 @@ public class QuakeFetcher {
         return requestUrl;
     }
 
+    // Build request URL for all earthquakes in the world since 2016-09-28
+    private String buildAllWorldRequestUrl() {
+
+        final String requestUrl = Uri.parse(USGS_QUERY_URL)
+                .buildUpon()
+                .appendQueryParameter("format", "geojson")  // Response format = GeoJSON
+                .appendQueryParameter("starttime", "2016-09-28")  // Response format = GeoJSON
+                .build().toString();
+
+        return requestUrl;
+    }
+
     // Parse JSON response from USGS server
-    public List<Quake> parseJsonString(String jsonString) {
+    // and save ID of the most recent earthquake to SharedPreferences
+    // (this is needed for new earthquakes notifications).
+    public List<Quake> parseJsonString(Context context, String jsonString) {
 
         // Empty ArrayList for the list of earthquakes
         List<Quake> quakes = new ArrayList<>();
@@ -131,6 +145,16 @@ public class QuakeFetcher {
             Log.e(LOG_TAG, "Failed to parse JSON", e);
         }
 
+        // If list of quakes is not empty
+        if (quakes.size() > 0) {
+
+            // Get ID of the most recent earthquake
+            String resultId = quakes.get(0).getId();
+
+            // Save this ID to SharedPreferences
+            QuakeUtils.setLastResultId(context, resultId);
+        }
+
         // Return the list of earthquakes
         return quakes;
     }
@@ -145,8 +169,22 @@ public class QuakeFetcher {
         // Get JSON response from USGS server
         String jsonResponse = QuakeUtils.getJsonString(requestURL, LOG_TAG);
 
-        // Parse JSON response and return list of earthquakes
-        return parseJsonString(jsonResponse);
+        // Parse JSON response and save list of earthquakes
+        return parseJsonString(context, jsonResponse);
+    }
+
+
+    // Fetch list of all earthquakes in the world since 2016-09-28 from USGS server
+    public List<Quake> fetchAllWorldQuakes(Context context) {
+
+        // Build request URL (query to USGS server)
+        String requestURL = buildAllWorldRequestUrl();
+
+        // Get JSON response from USGS server
+        String jsonResponse = QuakeUtils.getJsonString(requestURL, LOG_TAG);
+
+        // Parse JSON response and save list of earthquakes
+        return parseJsonString(context, jsonResponse);
     }
 
 }

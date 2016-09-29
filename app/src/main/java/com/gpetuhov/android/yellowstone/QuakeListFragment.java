@@ -2,6 +2,7 @@ package com.gpetuhov.android.yellowstone;
 
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -46,6 +47,14 @@ public class QuakeListFragment extends Fragment
     public void setOnQuakeSelectedListener(Callbacks host) {
         // Save reference to the host
         mCallbacks = host;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // Start or stop quake notifications service
+        QuakePollService.setServiceAlarm(getActivity());
     }
 
     // Best practice to initialize a loader is in the fragment's onActivityCreated method,

@@ -4,6 +4,7 @@ package com.gpetuhov.android.yellowstone;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdate;
@@ -32,6 +33,9 @@ public class QuakeUtils {
     // Shifts from Caldera to include on map
     public static final double LAT_SHIFT = 0.5;
     public static final double LNG_SHIFT = 0.6;
+
+    // Key for the most recent earthquake ID in SharedPreferences
+    public static final String PREF_LAST_RESULT_ID = "last_result_id";
 
     // Return Caldera latitude converted to double
     public static double getCalderaLatDouble() {
@@ -168,6 +172,22 @@ public class QuakeUtils {
         // Shutdown for OkHttp isn't necessary
 
         return jsonResponse;
+    }
+
+
+    // Return ID of the most recent fetched earthquake from SharedPreferences
+    public static String getLastResultId(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getString(PREF_LAST_RESULT_ID, null);
+    }
+
+
+    // Set new value for the ID of the most recent fetched earthquake in SharedPreferences
+    public static void setLastResultId(Context context, String lastResultId) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putString(PREF_LAST_RESULT_ID, lastResultId)
+                .apply();
     }
 
 }

@@ -1,5 +1,6 @@
 package com.gpetuhov.android.yellowstone;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -21,6 +22,16 @@ public class MainActivity extends AppCompatActivity {
 
     // ViewPager for displaying main pages of the app
     private ViewPager mViewPager;
+
+
+    // Return new intent with to start this activity
+    public static Intent newIntent (Context context) {
+
+        // Create explicit intent to start this activity
+        Intent intent = new Intent(context, MainActivity.class);
+
+        return intent;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

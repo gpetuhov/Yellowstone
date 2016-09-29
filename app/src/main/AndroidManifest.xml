@@ -54,6 +54,9 @@
             android:parentActivityName=".MainActivity">
         </activity>
 
+        <!--New earthquakes checking and notification service-->
+        <service android:name=".QuakePollService"/>
+
     </application>
 
 </manifest>

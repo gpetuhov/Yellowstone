@@ -29,6 +29,7 @@ public class QuakeLoader extends AsyncTaskLoader<List<Quake>> {
     @Override
     public List<Quake> loadInBackground() {
         // Create new QuakeFetcher object and return result of its fetchQuakes method
-        return new QuakeFetcher().fetchQuakes(mContext);
+        // TODO: change to fetchQuakes after tests
+        return new QuakeFetcher().fetchAllWorldQuakes(mContext);
     }
 }

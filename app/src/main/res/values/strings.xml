@@ -12,6 +12,7 @@
     <!--Empty view text-->
     <string name="no_internet_connection">No internet connection</string>
 
+
     <!--Settings text-->
 
     <!--Minimum magnitude settings-->
@@ -39,5 +40,23 @@
 
     <!--Value for magnitudes 4.5+ in SharedPreferences-->
     <string name="pref_magnitude_value_3">4</string>
+
+
+    <!--Quake notifications settings-->
+
+    <!--Key for storing quake notifications settings in SharedPreference-->
+    <string name="pref_quake_notify_key">quake_notify</string>
+
+    <!--Title of quake notifications settings-->
+    <string name="pref_quake_notify_label">Notify of new quakes</string>
+
+
+    <!--Quake notification text-->
+
+    <!--Quake notification ticker-->
+    <string name="quake_notification_title">Earthquakes updated</string>
+
+    <!--Quake notification text-->
+    <string name="quake_notification_text">New earthquakes in Yellowstone</string>
 
 </resources>
