@@ -71,7 +71,7 @@ public class QuakeFetcher {
         final String requestUrl = Uri.parse(USGS_QUERY_URL)
                 .buildUpon()
                 .appendQueryParameter("format", "geojson")  // Response format = GeoJSON
-                .appendQueryParameter("starttime", "2016-09-28")  // Response format = GeoJSON
+                .appendQueryParameter("starttime", "2016-09-29")  // Response format = GeoJSON
                 .build().toString();
 
         return requestUrl;

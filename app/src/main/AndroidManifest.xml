@@ -12,6 +12,10 @@
     <!--Permission to write data to external storage. Needed by Google Maps-->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
+    <!--Permission to receive broadcast intent notifying of system startup.
+        Needed by broadcast receiver to activate quake polling service on startup-->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -56,6 +60,13 @@
 
         <!--New earthquakes checking and notification service-->
         <service android:name=".QuakePollService"/>
+
+        <!--Broadcast receiver activates quake polling service on system startup-->
+        <receiver android:name=".StartupReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
 
     </application>
 
