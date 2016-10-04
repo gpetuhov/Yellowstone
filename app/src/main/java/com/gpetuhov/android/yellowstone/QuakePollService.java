@@ -1,5 +1,6 @@
 package com.gpetuhov.android.yellowstone;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
@@ -9,8 +10,8 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.preference.PreferenceManager;
+import android.util.Log;
 
 import java.util.List;
 
@@ -18,11 +19,35 @@ import java.util.List;
 // Service checks for new earthquakes and sends notifications to user
 public class QuakePollService extends IntentService {
 
-    // Tag for logging
-    private static final String LOG_TAG = QuakePollService.class.getName();
+    // Action constant for outgoing intent to show notification
+    public static final String ACTION_SHOW_NOTIFICATION =
+            "com.gpetuhov.android.yellowstone.SHOW_NOTIFICATION";
+
+    // Our own permission for outgoing intents from the service.
+    // Only components that use the same permission will be able to receive these intents.
+    public static final String PERM_PRIVATE =
+            "com.gpetuhov.android.yellowstone.PRIVATE";
+
+    // Polling interval 60 seconds (for testing)
+    public static final long POLL_INTERVAL_60SEC = 1000 * 60;
+
+    // Polling interval 1 hour (for release)
+    public static final long POLL_INTERVAL_HOUR = AlarmManager.INTERVAL_HOUR;
 
     // Polling interval in milliseconds
-    public static final long POLL_INTERVAL = 1000 * 60; // 60 seconds
+    public static final long POLL_INTERVAL = POLL_INTERVAL_HOUR;
+
+    // Key for notification request code in outgoing intent
+    public static final String REQUEST_CODE = "REQUEST_CODE";
+
+    // Key for notification in outgoing intent
+    public static final String NOTIFICATION = "NOTIFICATION";
+
+    // ID of new quake notification. Older notifications are replaced by new with the same ID.
+    public static final int QUAKE_NOTIFICATION_ID = 0;
+
+    // Tag for logging
+    private static final String LOG_TAG = QuakePollService.class.getName();
 
     // Create new intent to start this service
     public static Intent newIntent(Context context) {
@@ -85,8 +110,7 @@ public class QuakePollService extends IntentService {
             String lastResultID = QuakeUtils.getLastResultId(this);
 
             // Fetch new list of quakes from the network
-            // TODO: Change to fetchQuakes after tests
-            List<Quake> quakes = new QuakeFetcher().fetchAllWorldQuakes(this);
+            List<Quake> quakes = new QuakeFetcher().fetchQuakes(this);
 
             // If quake list is empty, return
             if (quakes.size() == 0) {
@@ -100,6 +124,9 @@ public class QuakePollService extends IntentService {
             // is not equal to the ID of the most recent earthquake in last time fetched list
             if (!resultId.equals(lastResultID)) {
                 // Got a new result
+
+                // Post log statement
+                Log.i(LOG_TAG, "Got a new result");
 
                 // Get reference to resources
                 Resources resources = getResources();
@@ -120,12 +147,31 @@ public class QuakePollService extends IntentService {
                         .setAutoCancel(true)
                         .build();
 
-                // Get notification manager
-                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+                // Send ordered broadcast with this notification
+                showBackgroundNotification(QUAKE_NOTIFICATION_ID, notification);
 
-                // Display notification
-                notificationManager.notify(0, notification);
+            } else {
+                // Otherwise got and old result, do nothing, only post log statement
+                Log.i(LOG_TAG, "Got an old result");
             }
         }
+    }
+
+
+    // Create new outgoing broadcast intent and send ordered broadcast with it
+    private void showBackgroundNotification(int requestCode, Notification notification) {
+
+        // Create new outgoing intent for showing notification
+        Intent i = new Intent(ACTION_SHOW_NOTIFICATION);
+
+        // Put notification request code into intent
+        i.putExtra(REQUEST_CODE, requestCode);
+
+        // Put notification into intent
+        i.putExtra(NOTIFICATION, notification);
+
+        // Send ordered broadcast with this intent and set initial broadcast result to "OK".
+        // If no receiver sets result to "canceled", notification will be shown by result receiver.
+        sendOrderedBroadcast(i, PERM_PRIVATE, null, null, Activity.RESULT_OK, null, null);
     }
 }

@@ -2,12 +2,18 @@
 <manifest package="com.gpetuhov.android.yellowstone"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--Our own permission for different components within the app-->
+    <permission
+        android:name="com.gpetuhov.android.yellowstone.PRIVATE"
+        android:protectionLevel="signature"/>
+
+
     <!--Permission to access internet. Needed in our app and also by Google Maps-->
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <!--Permission to access network state.
         Needed to check internet availability and also by Google Maps-->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!--Permission to write data to external storage. Needed by Google Maps-->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -15,6 +21,10 @@
     <!--Permission to receive broadcast intent notifying of system startup.
         Needed by broadcast receiver to activate quake polling service on startup-->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <!--This app uses our own permission for different components within the app-->
+    <uses-permission android:name="com.gpetuhov.android.yellowstone.PRIVATE"/>
+
 
     <application
         android:allowBackup="true"
@@ -46,8 +56,8 @@
         <!--Photo webpage activity-->
         <activity
             android:name=".PhotoPageActivity"
-            android:parentActivityName=".MainActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize">
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:parentActivityName=".MainActivity">
             <!--PhotoPageActivity is set to handle configuration changes itself-->
             <!--This is needed for WebView not to reload webpages on orientation change-->
         </activity>
@@ -65,6 +75,20 @@
         <receiver android:name=".StartupReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
+        <!--Broadcast receiver receives broadcast from quake polling service
+            and shows new quake notifications depending on broadcast result-->
+        <receiver
+            android:name=".QuakeNotificationReceiver"
+            android:exported="false">
+            <intent-filter
+                android:priority="-999">
+                <!--The receiver has the least priority of all receivers in the app
+                    to be the last one who receives broadcast from quake polling service-->
+                <!--Priority levels below -999 are reserved by the system-->
+                <action android:name="com.gpetuhov.android.yellowstone.SHOW_NOTIFICATION"/>
             </intent-filter>
         </receiver>
 

@@ -8,14 +8,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 
 import java.util.List;
 
 
 // Activity for details of the earthquake.
 // Uses ViewPager to swipe between earthquakes.
-public class QuakePagerActivity extends AppCompatActivity {
+public class QuakePagerActivity extends VisibleActivity {
 
     // Key for extra data in intent
     private static final String EXTRA_QUAKE_ID = "quake_id_extra_data";

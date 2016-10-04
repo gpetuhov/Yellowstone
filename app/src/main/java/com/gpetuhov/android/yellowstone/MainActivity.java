@@ -5,14 +5,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 
 
 // Main activity with Tabs and ViewPager
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends VisibleActivity {
 
     // Last ViewPager position key in SharedPreferences
     public static final String PREF_LAST_PAGE = "lastViewPagerPosition";
