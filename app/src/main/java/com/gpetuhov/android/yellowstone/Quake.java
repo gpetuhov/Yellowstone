@@ -121,4 +121,44 @@ public class Quake {
         DecimalFormat longitudeFormat = new DecimalFormat("0.000");
         return longitudeFormat.format(mLongitude);
     }
+
+    // Check if value of fields of this Quake object equal to values of fields of passed Quake object
+    @Override
+    public boolean equals(Object o) {
+
+        // If passed object is instance of Quake class
+        if (o instanceof Quake) {
+
+            // Cast passed object to Quake object
+            Quake quake = (Quake) o;
+
+            // Get values of fields of passed in Quake object
+            String ids = quake.getId();
+            double magnitude = quake.getMagnitude();
+            String location = quake.getLocation();
+            double latitude = quake.getLatitude();
+            double longitude = quake.getLongitude();
+            double depth = quake.getDepth();
+            long time = quake.getTimeInMilliseconds();
+            String url = quake.getUrl();
+
+            // If any of the fields are not equal, then quakes are not equal. Return false
+            if (!ids.equals(getId())) { return false; }
+            if (magnitude != getMagnitude()) { return false; }
+            if (!location.equals(getLocation())) { return false; }
+            if (latitude != getLatitude()) { return false; }
+            if (longitude != getLongitude()) { return false; }
+            if (depth != getDepth()) { return false; }
+            if (time != getTimeInMilliseconds()) { return false; }
+            if (!url.equals(getUrl())) { return false; }
+
+            // Otherwise quakes are equal. Return true
+            return true;
+
+        } else {
+            // Otherwise passed object is not instance of Quake class,
+            // so this quake definitely is not equal to it.
+            return false;
+        }
+    }
 }
