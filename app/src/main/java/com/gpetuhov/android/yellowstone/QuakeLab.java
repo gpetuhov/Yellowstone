@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 
 import com.gpetuhov.android.yellowstone.data.QuakeCursorWrapper;
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
@@ -60,27 +61,41 @@ public class QuakeLab {
         // Create new empty list of quakes
         List<Quake> quakes = new ArrayList<>();
 
-        // Read all rows from quakes table (SELECT * FROM quake_table_name)
-        // and save result in a cursor wrapper.
-        QuakeCursorWrapper cursor = queryQuakes(mDatabase, null, null);
+        // Get content resolver for the application context, query for all quakes
+        // and save received cursor.
+        Cursor cursor = mContext.getContentResolver().query(
+                QuakeEntry.CONTENT_URI, // URI
+                null,                   // Projection
+                null,                   // Selection
+                null,                   // Selection arguments
+                null                    // Sort order
+        );
+
+        // If the cursor is null, return empty list of quakes
+        if (cursor == null) {
+            return quakes;
+        }
+
+        // Create quake cursor wrapper upon the received cursor
+        QuakeCursorWrapper cursorWrapper = new QuakeCursorWrapper(cursor);
 
         try {
             // Move to the first row of the cursor
-            cursor.moveToFirst();
+            cursorWrapper.moveToFirst();
 
             // While we didn't move after the last row of the cursor
-            while (!cursor.isAfterLast()) {
+            while (!cursorWrapper.isAfterLast()) {
 
                 // Extract Quake object from the cursor row and add it to list of quakes
-                quakes.add(cursor.getQuake());
+                quakes.add(cursorWrapper.getQuake());
 
                 // Move to the next row of the cursor
-                cursor.moveToNext();
+                cursorWrapper.moveToNext();
             }
 
         } finally {
             // Always close cursor to prevent memory leaks
-            cursor.close();
+            cursorWrapper.close();
         }
 
         return quakes;
@@ -102,34 +117,44 @@ public class QuakeLab {
     }
 
 
-    // Return Quake object with specified ID
-    public Quake getQuake(String quakeId) {
+    // Return Quake object with specified ID from the database table
+    public Quake getQuake(long quakeDbId) {
 
-        // Query database and save result in a cursor wrapper
-        QuakeCursorWrapper cursor = queryQuakes(    // SELECT * FROM quake_table_name
-                mDatabase,
-                QuakeEntry.COLUMN_IDS + " = ?",     // WHERE ids =
-                new String[] { quakeId }            // quakeId
-                                                    // (here we have one argument of WHERE clause,
-                                                    // which is passed in as new String array with one element)
+        // Get content resolver for the application context, query for the quake with specified ID
+        // and save received cursor.
+        Cursor cursor = mContext.getContentResolver().query(
+                Uri.withAppendedPath(QuakeEntry.CONTENT_URI, String.valueOf(quakeDbId)),
+                // Build URI (scheme://content_authority/table_name/row_id)
+                null,                   // Projection
+                null,                   // Selection
+                null,                   // Selection arguments
+                null                    // Sort order
         );
+
+        // If the cursor is null, return null
+        if (cursor == null) {
+            return null;
+        }
+
+        // Create quake cursor wrapper upon the received cursor
+        QuakeCursorWrapper cursorWrapper = new QuakeCursorWrapper(cursor);
 
         try {
             // If there are no rows in the response cursor
-            if (cursor.getCount() == 0) {
+            if (cursorWrapper.getCount() == 0) {
                 // There is no earthquake with specified ID in the database, nothing to return
                 return null;
             }
 
             // Move to the first row of the cursor
-            cursor.moveToFirst();
+            cursorWrapper.moveToFirst();
 
             // Extract Quake object from the cursor row and return it
-            return cursor.getQuake();
+            return cursorWrapper.getQuake();
 
         } finally {
             // Always close cursor to prevent memory leaks
-            cursor.close();
+            cursorWrapper.close();
         }
     }
 

@@ -66,7 +66,7 @@ public class QuakePagerActivity extends VisibleActivity {
                 // Return QuakeFragment with details of the quake at "position".
                 // ID of the quake to display is passed to the instance of QuakeFragment
                 // as a fragment argument.
-                return QuakeFragment.newInstance(quake.getId());
+                return QuakeFragment.newInstance(quake.getDbId());
             }
 
             @Override

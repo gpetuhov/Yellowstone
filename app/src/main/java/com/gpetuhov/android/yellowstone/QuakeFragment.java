@@ -47,13 +47,13 @@ public class QuakeFragment extends Fragment {
     private MapView mMapView;
 
     // Return new instance of this fragment and attach arguments to it
-    public static QuakeFragment newInstance(String quakeId) {
+    public static QuakeFragment newInstance(long quakeDbId) {
 
         // Create new empty Bundle object for fragment arguments
         Bundle args = new Bundle();
 
         // Put earthquake ID into Bundle object
-        args.putString(ARG_QUAKE_ID, quakeId);
+        args.putLong(ARG_QUAKE_ID, quakeDbId);
 
         // Create new instance of this fragment
         QuakeFragment fragment = new QuakeFragment();
@@ -69,11 +69,11 @@ public class QuakeFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         // Get earthquake ID from the fragment's arguments
-        String quakeID = getArguments().getString(ARG_QUAKE_ID);
+        long quakeDbId = getArguments().getLong(ARG_QUAKE_ID);
 
         // Get earthquake with received ID from QuakeLab
         // and store it mQuake field
-        mQuake = QuakeLab.get(getActivity()).getQuake(quakeID);
+        mQuake = QuakeLab.get(getActivity()).getQuake(quakeDbId);
     }
 
     @Override

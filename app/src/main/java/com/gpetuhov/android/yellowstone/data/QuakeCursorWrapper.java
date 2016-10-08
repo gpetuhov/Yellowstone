@@ -30,6 +30,9 @@ public class QuakeCursorWrapper extends CursorWrapper {
         // Create new Quake object with data extracted from a cursor row
         Quake quake = new Quake(ids, magnitude, location, time, url, latitude, longitude, depth);
 
+        // Set ID of the earthquake in the database table
+        quake.setDbId(getLong(getColumnIndex(QuakeEntry._ID)));
+
         return quake;
     }
 }

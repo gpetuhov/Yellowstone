@@ -7,7 +7,10 @@ import java.util.Date;
 // Stores information about one earthquake
 public class Quake {
 
-    // ID of the earthquake
+    // ID of the earthquake in the database table of this app
+    private long dbId;
+
+    // ID of the earthquake that comes from USGS server
     private String mId;
 
     // Magnitude of the earthquake
@@ -41,6 +44,16 @@ public class Quake {
         mLatitude = latitude;
         mLongitude = longitude;
         mDepth = depth;
+    }
+
+    // Return the ID of the earthquake in the database table
+    public long getDbId() {
+        return dbId;
+    }
+
+    // Set the ID of the earthquake in the database table
+    public void setDbId(long dbId) {
+        this.dbId = dbId;
     }
 
     // Return the ID of the earthquake

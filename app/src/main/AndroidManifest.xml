@@ -92,6 +92,12 @@
             </intent-filter>
         </receiver>
 
+        <!--Quake content provider-->
+        <provider
+            android:name=".data.QuakeProvider"
+            android:authorities="com.gpetuhov.android.yellowstone"
+            android:exported="false" />
+
     </application>
 
 </manifest>
