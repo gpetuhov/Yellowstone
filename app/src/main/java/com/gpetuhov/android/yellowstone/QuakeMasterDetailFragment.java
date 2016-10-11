@@ -76,7 +76,7 @@ public class QuakeMasterDetailFragment extends Fragment
             // If resource id does not exist, then we are on phone and must start new activity
 
             // Create explicit intent to start activity with details of the earthquake
-            Intent intent = QuakePagerActivity.newIntent(getActivity(), quake.getId());
+            Intent intent = QuakePagerActivity.newIntent(getActivity(), quake.getDbId());
 
             // Start activity with details of the earthquake
             startActivity(intent);

@@ -26,13 +26,13 @@ public class QuakePagerActivity extends VisibleActivity {
     private List<Quake> mQuakes;
 
     // Return new intent with extra data to start this activity
-    public static Intent newIntent(Context packageContext, String quakeId) {
+    public static Intent newIntent(Context packageContext, long quakeDbId) {
 
         // Create explicit intent to start this activity
         Intent intent = new Intent(packageContext, QuakePagerActivity.class);
 
         // Put ID of earthquake as extra data in intent
-        intent.putExtra(EXTRA_QUAKE_ID, quakeId);
+        intent.putExtra(EXTRA_QUAKE_ID, quakeDbId);
 
         return intent;
     }

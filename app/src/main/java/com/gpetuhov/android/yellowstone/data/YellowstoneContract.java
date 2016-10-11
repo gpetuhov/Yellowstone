@@ -1,6 +1,7 @@
 package com.gpetuhov.android.yellowstone.data;
 
 
+import android.content.ContentResolver;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
@@ -26,6 +27,14 @@ public final class YellowstoneContract {
 
         // Full content URI to access quake data in the content provider
         public static final Uri CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_QUAKES);
+
+        // The MIME type of the URI for a list of quakes
+        public static final String CONTENT_LIST_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_QUAKES;
+
+        // The MIME type of the URL for a single quake
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_QUAKES;
 
         // Name of the database table for quakes
         public final static String TABLE_NAME = "quakes";

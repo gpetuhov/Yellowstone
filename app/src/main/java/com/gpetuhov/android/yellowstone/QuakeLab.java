@@ -1,6 +1,7 @@
 package com.gpetuhov.android.yellowstone;
 
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -105,14 +106,23 @@ public class QuakeLab {
     // Set new list of earthquakes
     public void setQuakes(List<Quake> quakes) {
 
-        // Delete all rows from quake table (remove previously fetched data)
-        mDatabase.delete(QuakeEntry.TABLE_NAME, null, null);
+        // Get content resolver for the application context
+        ContentResolver contentResolver = mContext.getContentResolver();
+
+        // Delete all rows from quake table (remove previously fetched data).
+        // Method returns number of rows deleted, but we don't use it.
+        contentResolver.delete(QuakeEntry.CONTENT_URI, null, null);
 
         // For each earthquake in the list
         for (Quake quake : quakes) {
-            // Get content values for this earthquake
-            // and insert content values into quake table
-            mDatabase.insert(QuakeEntry.TABLE_NAME, null, getContentValues(quake));
+            // Get content values for this earthquake and insert content values into the provider,
+            // returning the content URI for this new quake.
+            Uri newUri = contentResolver.insert(QuakeEntry.CONTENT_URI, getContentValues(quake));
+
+            // If URI for the new quake is null, stop inserting new quakes into the table and return
+            if (newUri == null) {
+                return;
+            }
         }
     }
 

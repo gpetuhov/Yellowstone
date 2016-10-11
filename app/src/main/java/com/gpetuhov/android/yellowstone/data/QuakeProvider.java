@@ -80,7 +80,7 @@ public class QuakeProvider extends ContentProvider {
         // Match URI to a code and save it to a variable
         int match = sUriMatcher.match(uri);
 
-        // Depending of the code query for all quakes or for the specific quake
+        // Depending on the code, query for all quakes or for the specific quake
         switch (match) {
             case QUAKES:
                 // Query for all quakes
@@ -129,36 +129,112 @@ public class QuakeProvider extends ContentProvider {
         }
     }
 
-    /**
-     * Insert new data into the provider with the given ContentValues.
-     */
+    // Insert new data into the provider with the given ContentValues
     @Override
     public Uri insert(Uri uri, ContentValues contentValues) {
-        return null;
+
+        // Match URI to a code and save it to a variable
+        final int match = sUriMatcher.match(uri);
+
+        // Check if thw URI addresses the whole quake table
+        switch (match) {
+            case QUAKES:
+                // Insert new quake in the quake table
+                return insertQuake(uri, contentValues);
+
+            default:
+                // URI addresses specific row or didn't match any of the codes.
+                // Cannot insert new quake.
+                return null;
+        }
     }
 
-    /**
-     * Updates the data at the given selection and selection arguments, with the new ContentValues.
-     */
+    // Insert quake into the quake table with the given content values.
+    // Return the new content URI for that specific row in the table.
+    private Uri insertQuake(Uri uri, ContentValues values) {
+
+        // Get writable database
+        SQLiteDatabase database = mDbHelper.getWritableDatabase();
+
+        // Insert new quake into quake table and get new row ID
+        long newRowId = database.insert(QuakeEntry.TABLE_NAME, null, values);
+
+        // If new row ID is -1, an error occurred
+        if (newRowId == -1) {
+            // Return null instead of the URI of the new row
+            return null;
+        }
+
+        // Build new row URI by appending new row ID to the quake table URI and return it
+        return ContentUris.withAppendedId(uri, newRowId);
+    }
+
+    // Updates the data at the given selection and selection arguments, with the new ContentValues.
     @Override
     public int update(Uri uri, ContentValues contentValues, String selection, String[] selectionArgs) {
+        // We don't use this method in our app, so we leave it blank.
         return 0;
     }
 
-    /**
-     * Delete the data at the given selection and selection arguments.
-     */
+    // Delete the data at the given selection and selection arguments.
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        return 0;
+
+        // Get writable database
+        SQLiteDatabase database = mDbHelper.getWritableDatabase();
+
+        // Match URI to a code and save it to a variable
+        final int match = sUriMatcher.match(uri);
+
+        // Depending on the code, delete all quakes or for the specific quake
+        switch (match) {
+            case QUAKES:
+                // Delete all rows that match the selection and selection args
+                // and return number of rows deleted.
+                return database.delete(QuakeEntry.TABLE_NAME, selection, selectionArgs);
+
+            case QUAKE_ID:
+                // Delete a single row given by the ID in the URI
+
+                // Build selection (WHERE clause)
+                selection = QuakeEntry._ID + " = ?";    // WHERE _id =
+
+                // Build selection arguments (arguments of the condition of WHERE clause).
+                // To do this, we extract the last part of URI into long variable,
+                // then get String value from it and create new array of 1 element,
+                // containing this String value.
+                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+
+                // Perform delete operation and return number of rows deleted
+                return database.delete(QuakeEntry.TABLE_NAME, selection, selectionArgs);
+
+            default:
+                // URI didn't match any of the codes. No rows were deleted. Return 0.
+                return 0;
+        }
     }
 
-    /**
-     * Returns the MIME type of data for the content URI.
-     */
+    // Returns the MIME type of data for the content URI
     @Override
     public String getType(Uri uri) {
-        return null;
+
+        // Match URI to a code and save it to a variable
+        final int match = sUriMatcher.match(uri);
+
+        // Depending on the code, return MIME type of a list of quakes or a single quake
+        switch (match) {
+            case QUAKES:
+                // Return MIME type of a list of quakes
+                return QuakeEntry.CONTENT_LIST_TYPE;
+
+            case QUAKE_ID:
+                // Return MIME type of a single quake
+                return QuakeEntry.CONTENT_ITEM_TYPE;
+
+            default:
+                // URI didn't match any of the codes. Return null.
+                return null;
+        }
     }
 
 }
