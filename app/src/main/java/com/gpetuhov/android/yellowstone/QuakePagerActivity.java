@@ -48,7 +48,7 @@ public class QuakePagerActivity extends VisibleActivity {
         mViewPager = (ViewPager) findViewById(R.id.activity_quake_pager_viewpager);
 
         // Get list of quakes
-        mQuakes = QuakeLab.get(this).getQuakes();
+        mQuakes = QuakeUtils.getQuakes(this);
 
         // Get fragment manager
         FragmentManager fragmentManager = getSupportFragmentManager();

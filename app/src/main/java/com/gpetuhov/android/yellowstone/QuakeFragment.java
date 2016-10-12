@@ -71,9 +71,9 @@ public class QuakeFragment extends Fragment {
         // Get earthquake ID from the fragment's arguments
         long quakeDbId = getArguments().getLong(ARG_QUAKE_ID);
 
-        // Get earthquake with received ID from QuakeLab
+        // Get earthquake with received ID from quake table
         // and store it mQuake field
-        mQuake = QuakeLab.get(getActivity()).getQuake(quakeDbId);
+        mQuake = QuakeUtils.getQuake(getActivity(), quakeDbId);
     }
 
     @Override

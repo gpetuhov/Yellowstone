@@ -4,14 +4,12 @@ package com.gpetuhov.android.yellowstone;
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
 
-import java.util.List;
-
 // AsyncTaskLoader that fetches data from USGS server
-public class QuakeLoader extends AsyncTaskLoader<List<Quake>> {
+public class QuakeNetLoader extends AsyncTaskLoader<Void> {
 
     private Context mContext;
 
-    public QuakeLoader(Context context) {
+    public QuakeNetLoader(Context context) {
         super(context);
 
         // Save application context in the field (it is used in loadInBackground method)
@@ -27,8 +25,9 @@ public class QuakeLoader extends AsyncTaskLoader<List<Quake>> {
 
     // Background thread for fetching list of earthquakes from request URL
     @Override
-    public List<Quake> loadInBackground() {
-        // Create new QuakeFetcher object and return result of its fetchQuakes method
-        return new QuakeFetcher().fetchQuakes(mContext);
+    public Void loadInBackground() {
+        // Create new QuakeFetcher object and fetch data
+        new QuakeFetcher().fetchQuakes(mContext);
+        return null;
     }
 }

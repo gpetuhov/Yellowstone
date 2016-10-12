@@ -2,11 +2,12 @@ package com.gpetuhov.android.yellowstone.data;
 
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
 
 import com.gpetuhov.android.yellowstone.Quake;
-import com.gpetuhov.android.yellowstone.QuakeLab;
+import com.gpetuhov.android.yellowstone.QuakeUtils;
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
 
@@ -35,7 +36,7 @@ public class TestDb extends AndroidTestCase {
         Quake testQuake = new Quake(ids, magnitude, location, time, url, latitude, longitude, depth);
 
         // Create ContentValues of test quake
-        ContentValues testValues = QuakeLab.getContentValues(testQuake);
+        ContentValues testValues = QuakeUtils.getQuakeContentValues(testQuake);
 
         // Insert ContentValues into database and get a row ID back
         long quakeRowId;
@@ -45,28 +46,36 @@ public class TestDb extends AndroidTestCase {
         // SQLiteDatabase.insert returns -1 if an error occured.
         assertTrue("Error: test quake was not inserted", quakeRowId != -1);
 
-        // Query the database and receive a cursor wrapper back
-        QuakeCursorWrapper cursor = QuakeLab.queryQuakes(
-                db,
-                QuakeEntry.COLUMN_IDS + " = ?",
-                new String[] { testQuake.getId() }
+        // Query the database and receive a cursor back
+        Cursor cursor = db.query(
+                QuakeEntry.TABLE_NAME,  // Table name
+                null,                   // Columns - if null, select all columns (SELECT * FROM table_name)
+                QuakeEntry.COLUMN_IDS + " = ?",            // WHERE clause
+                new String[] { testQuake.getId() },        // Arguments of WHERE clause (passed separately to prevent SQL injection)
+                null,                   // GROUP BY statement
+                null,                   // HAVING clause
+                null                    // ORDER BY clause
         );
+
+        // Create quake cursor wrapper upon the returned cursor
+        QuakeCursorWrapper cursorWrapper = new QuakeCursorWrapper(cursor);
 
         // Move the cursor to a valid database row and check to see if we got any records back
         // from the query
-        assertTrue( "Error: No Records returned from quake query", cursor.moveToFirst() );
+        assertTrue( "Error: No Records returned from quake query", cursorWrapper.moveToFirst() );
 
         // Get quake from the cursor
-        Quake quakeFromDb = cursor.getQuake();
+        Quake quakeFromDb = cursorWrapper.getQuake();
 
         // Check if testQuake and quake from database are equal
         assertTrue("Error: Quake query validation failed", testQuake.equals(quakeFromDb));
 
         // Move the cursor to demonstrate that there is only one record in the cursor
         assertFalse( "Error: More than one record returned from quake query",
-                cursor.moveToNext() );
+                cursorWrapper.moveToNext() );
 
-        // Close cursor
+        // Close cursors
+        cursorWrapper.close();
         cursor.close();
 
         // Delete test quake from database and save number of deleted rows

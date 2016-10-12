@@ -1,10 +1,12 @@
 package com.gpetuhov.android.yellowstone;
 
 
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,23 +15,35 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.util.List;
+import com.gpetuhov.android.yellowstone.data.QuakeCursorWrapper;
+import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
 // Fragment contains list of earthquakes.
 // This fragment implements LoaderManager callbacks to update UI with data from loader.
 // Host of this fragment must implement its Callbacks interface
 // and set itself as a listener for the callbacks.
-public class QuakeListFragment extends Fragment
-        implements LoaderManager.LoaderCallbacks<List<Quake>> {
+public class QuakeListFragment extends Fragment {
 
-    // Loader ID
-    public static final int QUAKE_LOADER_ID = 1;
+    // Quake internet loader ID
+    public static final int QUAKE_NET_LOADER_ID = 1;
+
+    // Quake database loader ID
+    public static final int QUAKE_DB_LOADER_ID = 3;
 
     // RecyclerView for the list of earthquakes
     private RecyclerView mQuakeRecyclerView;
 
+    // Adapter for the RecyclerView
+    private QuakeAdapter mQuakeAdapter;
+
     // Empty view text (displayed when there is no data for RecyclerView)
     private TextView mEmptyView;
+
+    // Listener to LoaderManager callbacks for quake net loader
+    private QuakeNetLoaderListener mQuakeNetLoaderListener;
+
+    // Listener to LoaderManager callbacks for quake database loader
+    private QuakeDbLoaderListener mQuakeDbLoaderListener;
 
     // Stores reference to a host that uses this fragment
     // Host must implement Callbacks interface
@@ -55,6 +69,12 @@ public class QuakeListFragment extends Fragment
 
         // Start or stop quake notifications service
         QuakePollService.setServiceAlarm(getActivity());
+
+        // Create new quake net loader listener
+        mQuakeNetLoaderListener = new QuakeNetLoaderListener();
+
+        // Create new quake database loader listener
+        mQuakeDbLoaderListener = new QuakeDbLoaderListener();
     }
 
     // Best practice to initialize a loader is in the fragment's onActivityCreated method,
@@ -64,21 +84,27 @@ public class QuakeListFragment extends Fragment
     public void onResume() {
         super.onResume();
 
+        // Get reference to the LoaderManager
+        LoaderManager loaderManager = getActivity().getSupportLoaderManager();
+
+        // Start new quake database loader or restart existing (start loading data from the database)
+        // and set a listener for loader callbacks.
+        loaderManager.initLoader(QUAKE_DB_LOADER_ID, null, mQuakeDbLoaderListener);
+
         // If there is a network connection
         if (QuakeUtils.isNetworkAvailableAndConnected(getActivity())) {
-
-            // Get reference to the LoaderManager
-            LoaderManager loaderManager = getActivity().getSupportLoaderManager();
-
-            // Start new loader or restart existing (start loading data)
-            // and set this fragment as a listener for loader callbacks.
-            loaderManager.restartLoader(QUAKE_LOADER_ID, null, this);
+            // Start new quake net loader or restart existing (start loading data from the internet)
+            // and set a listener for loader callbacks.
+            loaderManager.restartLoader(QUAKE_NET_LOADER_ID, null, mQuakeNetLoaderListener);
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        // Create new adapter for the RecyclerView
+        mQuakeAdapter = new QuakeAdapter();
 
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_quake_list, container, false);
@@ -88,6 +114,9 @@ public class QuakeListFragment extends Fragment
 
         // Set LinearLayoutManager for our RecyclerView (we need vertical scroll list)
         mQuakeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        // Attach adapter to the RecyclerView
+        mQuakeRecyclerView.setAdapter(mQuakeAdapter);
 
         // Get access to TextView for empty view
         mEmptyView = (TextView) v.findViewById(R.id.empty_view);
@@ -100,8 +129,6 @@ public class QuakeListFragment extends Fragment
             // Hide empty view
             mEmptyView.setVisibility(View.GONE);
 
-            // Set adapter for RecyclerView
-            setupAdapter();
         } else {
             // Otherwise, display error
 
@@ -113,44 +140,6 @@ public class QuakeListFragment extends Fragment
         }
 
         return v;
-    }
-
-    // Set adapter for our RecyclerView
-    private void setupAdapter() {
-
-        // If the fragment is added to a parent activity
-        if (isAdded()) {
-
-            // Get list of quakes from QuakeLab
-            List<Quake> quakes = QuakeLab.get(getActivity()).getQuakes();
-
-            // Create new adapter with this list of quakes
-            // and set it as adapter for the RecyclerView
-            mQuakeRecyclerView.setAdapter(new QuakeAdapter(quakes));
-        }
-    }
-
-    // LoaderManager callbacks
-
-    // Returns new loader
-    @Override
-    public Loader<List<Quake>> onCreateLoader(int id, Bundle args) {
-        return new QuakeLoader(getActivity());
-    }
-
-    // When load is finished, saves the fetched data and updates UI
-    @Override
-    public void onLoadFinished(Loader<List<Quake>> loader, List<Quake> data) {
-        // Replace list in QuakeLab with quakes fetched from USGS server
-        QuakeLab.get(getActivity()).setQuakes(data);
-
-        // Create new adapter for RecyclerView with new list of quakes
-        setupAdapter();
-    }
-
-    // Method is called when data from loader is no longer valid
-    @Override
-    public void onLoaderReset(Loader<List<Quake>> loader) {
     }
 
 
@@ -210,16 +199,18 @@ public class QuakeListFragment extends Fragment
     }
 
 
-    // Adapter for our RecyclerView with list of earthquakes
+    // Adapter for our RecyclerView with list of earthquakes.
+    // RecyclerView doesn't have CursorAdapter, so we have to
+    // implement elements of CursorAdapter in our QuakeAdapter ourselves.
     private class QuakeAdapter extends RecyclerView.Adapter<QuakeHolder> {
 
-        // Empty list for the list of earthquakes
-        private List<Quake> mItems;
+        // Keeps cursor with the quakes table
+        private QuakeCursorWrapper mCursor;
 
-        public QuakeAdapter(List<Quake> items) {
-            mItems = items;
+        public QuakeAdapter() {
         }
 
+        // Method is called, when new view holder must be created
         @Override
         public QuakeHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             // Get LayoutInflater from parent activity
@@ -232,19 +223,93 @@ public class QuakeListFragment extends Fragment
             return new QuakeHolder(view);
         }
 
+        // Method is called, when the view holder must be connected with data
         @Override
         public void onBindViewHolder(QuakeHolder holder, int position) {
-            // Get earthquake at "position" from list of quakes
-            Quake quake = mItems.get(position);
+            // Move cursor to the passed in position
+            mCursor.moveToPosition(position);
+
+            // Get earthquake at "position" from the cursor
+            Quake quake = mCursor.getQuake();
 
             // Set ViewHolder of list item according to earthquake at "position"
             holder.bindQuake(quake);
         }
 
+        // Return number of elements in RecyclerView
         @Override
         public int getItemCount() {
-            // Return size of list of earthquakes
-            return mItems.size();
+            // If the cursor is null, then number of items is 0
+            if (mCursor == null) {
+                return 0;
+            }
+
+            // Otherwise return number of rows in the cursor
+            return mCursor.getCount();
+        }
+
+        // Swap cursor with new one
+        public void swapCursor(Cursor newCursor) {
+            // Create new quake cursor wrapper upon the passed in cursor
+            mCursor = new QuakeCursorWrapper(newCursor);
+
+            // Notify RecyclerView, that data has changed
+            notifyDataSetChanged();
+        }
+    }
+
+
+    // Listens to LoaderManager callbacks for quake net loader
+    private class QuakeNetLoaderListener implements LoaderManager.LoaderCallbacks<Void> {
+
+        // Returns new quake net loader
+        @Override
+        public Loader<Void> onCreateLoader(int id, Bundle args) {
+            return new QuakeNetLoader(getActivity());
+        }
+
+        // Method is called, when load is finished
+        @Override
+        public void onLoadFinished(Loader<Void> loader, Void data) {
+
+        }
+
+        // Method is called when data from loader is no longer valid
+        @Override
+        public void onLoaderReset(Loader<Void> loader) {
+
+        }
+    }
+
+
+    // Listens to LoaderManager callbacks for quake database loader
+    private class QuakeDbLoaderListener implements LoaderManager.LoaderCallbacks<Cursor> {
+
+        // Returns new quake database loader
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            // Create and return new cursor loader that loads quakes from quake table in the database
+            return new CursorLoader(getActivity(),
+                    QuakeEntry.CONTENT_URI,
+                    null,
+                    null,
+                    null,
+                    null);
+        }
+
+        // Method is called, when load is finished
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            // Swap cursor for the RecyclerView adapter
+            mQuakeAdapter.swapCursor(data);
+        }
+
+        // Method is called when data from loader is no longer valid
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+            // Swap for the RecyclerView adapter with null value
+            // (to release previously used cursor)
+            mQuakeAdapter.swapCursor(null);
         }
     }
 

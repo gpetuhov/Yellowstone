@@ -1,10 +1,14 @@
 package com.gpetuhov.android.yellowstone;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
+
+import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -77,13 +81,15 @@ public class QuakeFetcher {
         return requestUrl;
     }
 
-    // Parse JSON response from USGS server
+    // Parse JSON response from USGS server,
+    // save fetched data into quake table
     // and save ID of the most recent earthquake to SharedPreferences
     // (this is needed for new earthquakes notifications).
-    public List<Quake> parseJsonString(Context context, String jsonString) {
+    // Return ID of the most recent quake.
+    public String parseJsonString(Context context, String jsonString) {
 
-        // Empty ArrayList for the list of earthquakes
-        List<Quake> quakes = new ArrayList<>();
+        // Empty ArrayList for ContentValues of the earthquakes
+        List<ContentValues> quakesContentValues = new ArrayList<>();
 
         try {
 
@@ -136,8 +142,8 @@ public class QuakeFetcher {
                 // Create new Quake object with data from from the JSON response
                 Quake quake = new Quake(id, magnitude, location, time, url, latitude, longitude, depth);
 
-                // Add new Quake object to the list of earthquakes
-                quakes.add(quake);
+                // Add ContentValues for the new Quake object into the list
+                quakesContentValues.add(QuakeUtils.getQuakeContentValues(quake));
             }
 
         } catch (JSONException e) {
@@ -145,23 +151,49 @@ public class QuakeFetcher {
             Log.e(LOG_TAG, "Failed to parse JSON", e);
         }
 
-        // If list of quakes is not empty
-        if (quakes.size() > 0) {
+        // Get content resolver for the application context
+        ContentResolver contentResolver = context.getContentResolver();
 
-            // Get ID of the most recent earthquake
-            String resultId = quakes.get(0).getId();
+        // Delete all rows from quake table (remove previously fetched data).
+        // Method returns number of rows deleted, but we don't use it.
+        contentResolver.delete(QuakeEntry.CONTENT_URI, null, null);
 
-            // Save this ID to SharedPreferences
-            QuakeUtils.setLastResultId(context, resultId);
+        // If quakes content values list is not empty
+        if (quakesContentValues.size() > 0) {
+
+            // Get content values of the most recent quake
+            ContentValues mostRecentQuakeCV = quakesContentValues.get(0);
+
+            // Get ID of the most recent quake
+            String resultId = mostRecentQuakeCV.getAsString(QuakeEntry.COLUMN_IDS);
+
+            // Create new array of ContentValues of the proper size
+            ContentValues[] quakesContentValuesArray = new ContentValues[quakesContentValues.size()];
+
+            // Convert list of quake content values to array of quake content values
+            quakesContentValues.toArray(quakesContentValuesArray);
+
+            // Bulk insert this array into quake table
+            contentResolver.bulkInsert(QuakeEntry.CONTENT_URI, quakesContentValuesArray);
+
+            // If ID of the most recent quake is not null
+            if (resultId != null) {
+                // Save this ID to SharedPreferences
+                QuakeUtils.setLastResultId(context, resultId);
+
+                // Return ID of the most recent quake
+                return resultId;
+            }
         }
 
-        // Return the list of earthquakes
-        return quakes;
+        // If the fetched list is empty, return null
+        return null;
     }
 
 
     // Fetch list of earthquakes from USGS server
-    public List<Quake> fetchQuakes(Context context) {
+    // and return ID of the most recent quake
+    public String fetchQuakes(Context context) {
 
         // Build request URL (query to USGS server)
         String requestURL = buildRequestUrl(context);
@@ -174,8 +206,8 @@ public class QuakeFetcher {
     }
 
 
-    // Fetch list of all earthquakes in the world since 2016-09-28 from USGS server
-    public List<Quake> fetchAllWorldQuakes(Context context) {
+    // Fetch list of all earthquakes in the world from USGS server
+    public void fetchAllWorldQuakes(Context context) {
 
         // Build request URL (query to USGS server)
         String requestURL = buildAllWorldRequestUrl();
@@ -184,7 +216,7 @@ public class QuakeFetcher {
         String jsonResponse = QuakeUtils.getJsonString(requestURL, LOG_TAG);
 
         // Parse JSON response and save list of earthquakes
-        return parseJsonString(context, jsonResponse);
+        parseJsonString(context, jsonResponse);
     }
 
 }

@@ -15,9 +15,6 @@ import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 // Abstraction layer between quake database and UI.
 public class QuakeProvider extends ContentProvider {
 
-    // Tag for the log messages
-    public static final String LOG_TAG = QuakeProvider.class.getSimpleName();
-
     // URI matcher code for the content URI for the quakes table
     private static final int QUAKES = 100;
 
@@ -96,7 +93,7 @@ public class QuakeProvider extends ContentProvider {
                         sortOrder               // ORDER BY clause
                 );
 
-                return cursor;
+                break;
 
             case QUAKE_ID:
                 // Query for the specific quake
@@ -121,12 +118,18 @@ public class QuakeProvider extends ContentProvider {
                         sortOrder               // ORDER BY clause
                 );
 
-                return cursor;
+                break;
 
             default:
                 // URI didn't match any of the codes. Nothing to return.
                 return null;
         }
+
+        // Set notification URI for the cursor
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
+        // Return cursor
+        return cursor;
     }
 
     // Insert new data into the provider with the given ContentValues
@@ -165,6 +168,9 @@ public class QuakeProvider extends ContentProvider {
             return null;
         }
 
+        // Notify listeners, that data has changed
+        getContext().getContentResolver().notifyChange(uri, null);
+
         // Build new row URI by appending new row ID to the quake table URI and return it
         return ContentUris.withAppendedId(uri, newRowId);
     }
@@ -186,12 +192,17 @@ public class QuakeProvider extends ContentProvider {
         // Match URI to a code and save it to a variable
         final int match = sUriMatcher.match(uri);
 
+        // Number of rows deleted
+        int numRowsDeleted;
+
         // Depending on the code, delete all quakes or for the specific quake
         switch (match) {
             case QUAKES:
                 // Delete all rows that match the selection and selection args
                 // and return number of rows deleted.
-                return database.delete(QuakeEntry.TABLE_NAME, selection, selectionArgs);
+                numRowsDeleted = database.delete(QuakeEntry.TABLE_NAME, selection, selectionArgs);
+
+                break;
 
             case QUAKE_ID:
                 // Delete a single row given by the ID in the URI
@@ -206,12 +217,23 @@ public class QuakeProvider extends ContentProvider {
                 selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
 
                 // Perform delete operation and return number of rows deleted
-                return database.delete(QuakeEntry.TABLE_NAME, selection, selectionArgs);
+                numRowsDeleted = database.delete(QuakeEntry.TABLE_NAME, selection, selectionArgs);
+
+                break;
 
             default:
-                // URI didn't match any of the codes. No rows were deleted. Return 0.
-                return 0;
+                // URI didn't match any of the codes. No rows were deleted.
+                numRowsDeleted = 0;
         }
+
+        // If some rows were deleted
+        if (numRowsDeleted != 0) {
+            // Notify listeners, that data has changed
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
+        // Return number of rows deleted
+        return numRowsDeleted;
     }
 
     // Returns the MIME type of data for the content URI

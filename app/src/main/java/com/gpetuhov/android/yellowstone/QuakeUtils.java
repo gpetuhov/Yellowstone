@@ -1,9 +1,12 @@
 package com.gpetuhov.android.yellowstone;
 
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
@@ -13,6 +16,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.gpetuhov.android.yellowstone.data.QuakeCursorWrapper;
+import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,7 +54,7 @@ public class QuakeUtils {
 
     // Updates map with bounds including Caldera and points earthquakes
     // If quake is passed (not null), displays it on map.
-    // If not (quake == null), displays all earthquakes from QuakeLab.
+    // If not (quake == null), displays all earthquakes from quake table.
     public static void updateMap(Context context, GoogleMap googleMap, Quake quake) {
 
         // Do nothing, if map is not ready
@@ -61,8 +66,8 @@ public class QuakeUtils {
         List<Quake> quakes;
 
         if (quake == null) {
-            // If quake is not passed, get quakes from QuakeLab
-            quakes = QuakeLab.get(context).getQuakes();
+            // If quake is not passed, get all quakes from the quakes table
+            quakes = getQuakes(context);
         } else {
             // Otherwise create empty list and add passed quake to it
             // In this case list contains only one quake to display
@@ -190,4 +195,122 @@ public class QuakeUtils {
                 .apply();
     }
 
+
+    // Return content values to write Quake object into database
+    public static ContentValues getQuakeContentValues(Quake quake) {
+
+        // Create new content values
+        ContentValues values = new ContentValues();
+
+        // Put data from Quake object fields into content values
+        values.put(QuakeEntry.COLUMN_IDS, quake.getId());
+        values.put(QuakeEntry.COLUMN_MAGNITUDE, quake.getMagnitude());
+        values.put(QuakeEntry.COLUMN_LOCATION, quake.getLocation());
+        values.put(QuakeEntry.COLUMN_LATITUDE, quake.getLatitude());
+        values.put(QuakeEntry.COLUMN_LONGITUDE, quake.getLongitude());
+        values.put(QuakeEntry.COLUMN_DEPTH, quake.getDepth());
+        values.put(QuakeEntry.COLUMN_TIME, quake.getTimeInMilliseconds());
+        values.put(QuakeEntry.COLUMN_URL, quake.getUrl());
+
+        return values;
+    }
+
+
+    // Return list of earthquakes
+    public static List<Quake> getQuakes(Context context) {
+
+        // Create new empty list of quakes
+        List<Quake> quakes = new ArrayList<>();
+
+        // Get content resolver for the context, query for all quakes
+        // and save received cursor.
+        Cursor cursor = context.getContentResolver().query(
+                QuakeEntry.CONTENT_URI, // URI
+                null,                   // Projection
+                null,                   // Selection
+                null,                   // Selection arguments
+                null                    // Sort order
+        );
+
+        // If the cursor is null, return empty list of quakes
+        if (cursor == null) {
+            return quakes;
+        }
+
+        // Create quake cursor wrapper upon the received cursor
+        QuakeCursorWrapper cursorWrapper = new QuakeCursorWrapper(cursor);
+
+        try {
+            // Move to the first row of the cursor
+            cursorWrapper.moveToFirst();
+
+            // While we didn't move after the last row of the cursor
+            while (!cursorWrapper.isAfterLast()) {
+
+                // Extract Quake object from the cursor row and add it to list of quakes
+                quakes.add(cursorWrapper.getQuake());
+
+                // Move to the next row of the cursor
+                cursorWrapper.moveToNext();
+            }
+
+        } finally {
+            // Always close cursors, if not closed, to prevent memory leaks
+            if (!cursorWrapper.isClosed()) {
+                cursorWrapper.close();
+            }
+            if (!cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+
+        return quakes;
+    }
+
+
+    // Return Quake object with specified ID from the database table
+    public static Quake getQuake(Context context, long quakeDbId) {
+
+        // Get content resolver for the application context, query for the quake with specified ID
+        // and save received cursor.
+        Cursor cursor = context.getContentResolver().query(
+                Uri.withAppendedPath(QuakeEntry.CONTENT_URI, String.valueOf(quakeDbId)),
+                // Build URI (scheme://content_authority/table_name/row_id)
+                null,                   // Projection
+                null,                   // Selection
+                null,                   // Selection arguments
+                null                    // Sort order
+        );
+
+        // If the cursor is null, return null
+        if (cursor == null) {
+            return null;
+        }
+
+        // Create quake cursor wrapper upon the received cursor
+        QuakeCursorWrapper cursorWrapper = new QuakeCursorWrapper(cursor);
+
+        try {
+            // If there are no rows in the response cursor
+            if (cursorWrapper.getCount() == 0) {
+                // There is no earthquake with specified ID in the database, nothing to return
+                return null;
+            }
+
+            // Move to the first row of the cursor
+            cursorWrapper.moveToFirst();
+
+            // Extract Quake object from the cursor row and return it
+            return cursorWrapper.getQuake();
+
+        } finally {
+            // Always close cursors, if not closed, to prevent memory leaks
+            if (!cursorWrapper.isClosed()) {
+                cursorWrapper.close();
+            }
+            if (!cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+    }
 }

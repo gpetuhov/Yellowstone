@@ -13,8 +13,6 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 
-import java.util.List;
-
 
 // Service checks for new earthquakes and sends notifications to user
 public class QuakePollService extends IntentService {
@@ -110,15 +108,13 @@ public class QuakePollService extends IntentService {
             String lastResultID = QuakeUtils.getLastResultId(this);
 
             // Fetch new list of quakes from the network
-            List<Quake> quakes = new QuakeFetcher().fetchQuakes(this);
+            // and save ID of the most recent earthquake.
+            String resultId = new QuakeFetcher().fetchQuakes(this);
 
-            // If quake list is empty, return
-            if (quakes.size() == 0) {
+            // If this ID is null (data fetching failed), return
+            if (resultId == null) {
                 return;
             }
-
-            // Get ID of the most recent earthquake in the list
-            String resultId = quakes.get(0).getId();
 
             // If ID of the most recent earthquake in just fetched list
             // is not equal to the ID of the most recent earthquake in last time fetched list
