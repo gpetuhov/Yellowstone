@@ -15,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.gpetuhov.android.yellowstone.data.QuakeCursorWrapper;
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
 // Fragment contains list of earthquakes.
@@ -205,7 +204,7 @@ public class QuakeListFragment extends Fragment {
     private class QuakeAdapter extends RecyclerView.Adapter<QuakeHolder> {
 
         // Keeps cursor with the quakes table
-        private QuakeCursorWrapper mCursor;
+        private Cursor mCursor;
 
         public QuakeAdapter() {
         }
@@ -230,7 +229,7 @@ public class QuakeListFragment extends Fragment {
             mCursor.moveToPosition(position);
 
             // Get earthquake at "position" from the cursor
-            Quake quake = mCursor.getQuake();
+            Quake quake = QuakeUtils.getQuakeFromCursor(mCursor);
 
             // Set ViewHolder of list item according to earthquake at "position"
             holder.bindQuake(quake);
@@ -251,7 +250,7 @@ public class QuakeListFragment extends Fragment {
         // Swap cursor with new one
         public void swapCursor(Cursor newCursor) {
             // Create new quake cursor wrapper upon the passed in cursor
-            mCursor = new QuakeCursorWrapper(newCursor);
+            mCursor = newCursor;
 
             // Notify RecyclerView, that data has changed
             notifyDataSetChanged();
@@ -265,13 +264,23 @@ public class QuakeListFragment extends Fragment {
         // Returns new quake net loader
         @Override
         public Loader<Void> onCreateLoader(int id, Bundle args) {
+            // Create and return new loader that loads quakes from the network
             return new QuakeNetLoader(getActivity());
         }
 
         // Method is called, when load is finished
         @Override
         public void onLoadFinished(Loader<Void> loader, Void data) {
-
+            // UI gets updated automatically after fetching data from the network.
+            // In quake ContentProvider query(...) method we set notification URI
+            // in the returning cursor by calling cursor.setNotificationUri(...).
+            // Quake CursorLoader (that loads data from the database) gets this cursor back
+            // and registers an observer in ContentResolver.
+            // When QuakeNetLoader deletes and writes data into quake table,
+            // ContentProvider notifies ContentResolver about changes by calling
+            // getContext().getContentResolver().notifyChange(uri, null) in insert(...) and delete(...).
+            // ContentResolver notifies all registered observers.
+            // Observer, registered by CursorLoader, forces it to load new data.
         }
 
         // Method is called when data from loader is no longer valid

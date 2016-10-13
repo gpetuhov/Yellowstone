@@ -16,7 +16,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.gpetuhov.android.yellowstone.data.QuakeCursorWrapper;
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
 import java.io.IOException;
@@ -237,28 +236,22 @@ public class QuakeUtils {
             return quakes;
         }
 
-        // Create quake cursor wrapper upon the received cursor
-        QuakeCursorWrapper cursorWrapper = new QuakeCursorWrapper(cursor);
-
         try {
             // Move to the first row of the cursor
-            cursorWrapper.moveToFirst();
+            cursor.moveToFirst();
 
             // While we didn't move after the last row of the cursor
-            while (!cursorWrapper.isAfterLast()) {
+            while (!cursor.isAfterLast()) {
 
                 // Extract Quake object from the cursor row and add it to list of quakes
-                quakes.add(cursorWrapper.getQuake());
+                quakes.add(QuakeUtils.getQuakeFromCursor(cursor));
 
                 // Move to the next row of the cursor
-                cursorWrapper.moveToNext();
+                cursor.moveToNext();
             }
 
         } finally {
             // Always close cursors, if not closed, to prevent memory leaks
-            if (!cursorWrapper.isClosed()) {
-                cursorWrapper.close();
-            }
             if (!cursor.isClosed()) {
                 cursor.close();
             }
@@ -287,30 +280,47 @@ public class QuakeUtils {
             return null;
         }
 
-        // Create quake cursor wrapper upon the received cursor
-        QuakeCursorWrapper cursorWrapper = new QuakeCursorWrapper(cursor);
-
         try {
             // If there are no rows in the response cursor
-            if (cursorWrapper.getCount() == 0) {
+            if (cursor.getCount() == 0) {
                 // There is no earthquake with specified ID in the database, nothing to return
                 return null;
             }
 
             // Move to the first row of the cursor
-            cursorWrapper.moveToFirst();
+            cursor.moveToFirst();
 
             // Extract Quake object from the cursor row and return it
-            return cursorWrapper.getQuake();
+            return QuakeUtils.getQuakeFromCursor(cursor);
 
         } finally {
             // Always close cursors, if not closed, to prevent memory leaks
-            if (!cursorWrapper.isClosed()) {
-                cursorWrapper.close();
-            }
             if (!cursor.isClosed()) {
                 cursor.close();
             }
         }
+    }
+
+
+    // Return Quake object with data extracted from a cursor row
+    public static Quake getQuakeFromCursor(Cursor cursor) {
+
+        // Extract columns from a cursor row and save them to corresponding variables
+        String ids = cursor.getString(cursor.getColumnIndex(QuakeEntry.COLUMN_IDS));
+        double magnitude = cursor.getDouble(cursor.getColumnIndex(QuakeEntry.COLUMN_MAGNITUDE));
+        String location = cursor.getString(cursor.getColumnIndex(QuakeEntry.COLUMN_LOCATION));
+        double latitude = cursor.getDouble(cursor.getColumnIndex(QuakeEntry.COLUMN_LATITUDE));
+        double longitude = cursor.getDouble(cursor.getColumnIndex(QuakeEntry.COLUMN_LONGITUDE));
+        double depth = cursor.getDouble(cursor.getColumnIndex(QuakeEntry.COLUMN_DEPTH));
+        long time = cursor.getLong(cursor.getColumnIndex(QuakeEntry.COLUMN_TIME));
+        String url = cursor.getString(cursor.getColumnIndex(QuakeEntry.COLUMN_URL));
+
+        // Create new Quake object with data extracted from a cursor row
+        Quake quake = new Quake(ids, magnitude, location, time, url, latitude, longitude, depth);
+
+        // Set ID of the earthquake in the database table
+        quake.setDbId(cursor.getLong(cursor.getColumnIndex(QuakeEntry._ID)));
+
+        return quake;
     }
 }

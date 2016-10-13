@@ -57,25 +57,21 @@ public class TestDb extends AndroidTestCase {
                 null                    // ORDER BY clause
         );
 
-        // Create quake cursor wrapper upon the returned cursor
-        QuakeCursorWrapper cursorWrapper = new QuakeCursorWrapper(cursor);
-
         // Move the cursor to a valid database row and check to see if we got any records back
         // from the query
-        assertTrue( "Error: No Records returned from quake query", cursorWrapper.moveToFirst() );
+        assertTrue( "Error: No Records returned from quake query", cursor.moveToFirst() );
 
         // Get quake from the cursor
-        Quake quakeFromDb = cursorWrapper.getQuake();
+        Quake quakeFromDb = QuakeUtils.getQuakeFromCursor(cursor);
 
         // Check if testQuake and quake from database are equal
         assertTrue("Error: Quake query validation failed", testQuake.equals(quakeFromDb));
 
         // Move the cursor to demonstrate that there is only one record in the cursor
         assertFalse( "Error: More than one record returned from quake query",
-                cursorWrapper.moveToNext() );
+                cursor.moveToNext() );
 
         // Close cursors
-        cursorWrapper.close();
         cursor.close();
 
         // Delete test quake from database and save number of deleted rows
