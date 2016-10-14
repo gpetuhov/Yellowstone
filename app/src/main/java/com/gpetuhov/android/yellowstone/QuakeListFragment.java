@@ -10,12 +10,14 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
+import com.gpetuhov.android.yellowstone.sync.YellowstoneSyncAdapter;
 
 // Fragment contains list of earthquakes.
 // This fragment implements LoaderManager callbacks to update UI with data from loader.
@@ -23,11 +25,11 @@ import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 // and set itself as a listener for the callbacks.
 public class QuakeListFragment extends Fragment {
 
-    // Quake internet loader ID
-    public static final int QUAKE_NET_LOADER_ID = 1;
+    // Tag for log messages
+    public static final String LOG_TAG = "QuakeDataLoad";
 
     // Quake database loader ID
-    public static final int QUAKE_DB_LOADER_ID = 3;
+    public static final int QUAKE_DB_LOADER_ID = 1;
 
     // RecyclerView for the list of earthquakes
     private RecyclerView mQuakeRecyclerView;
@@ -37,9 +39,6 @@ public class QuakeListFragment extends Fragment {
 
     // Empty view text (displayed when there is no data for RecyclerView)
     private TextView mEmptyView;
-
-    // Listener to LoaderManager callbacks for quake net loader
-    private QuakeNetLoaderListener mQuakeNetLoaderListener;
 
     // Listener to LoaderManager callbacks for quake database loader
     private QuakeDbLoaderListener mQuakeDbLoaderListener;
@@ -69,9 +68,6 @@ public class QuakeListFragment extends Fragment {
         // Start or stop quake notifications service
         QuakePollService.setServiceAlarm(getActivity());
 
-        // Create new quake net loader listener
-        mQuakeNetLoaderListener = new QuakeNetLoaderListener();
-
         // Create new quake database loader listener
         mQuakeDbLoaderListener = new QuakeDbLoaderListener();
     }
@@ -86,16 +82,26 @@ public class QuakeListFragment extends Fragment {
         // Get reference to the LoaderManager
         LoaderManager loaderManager = getActivity().getSupportLoaderManager();
 
-        // Start new quake database loader or restart existing (start loading data from the database)
-        // and set a listener for loader callbacks.
+        // Initialize quake database loader and set a listener for loader callbacks.
+        // If the loader with the passed ID exists and the data is ready,
+        // initLoader immediately pushes data to onLoadFinished callback method.
+        // If not, loader is created and starts loading data.
+        // So, if quake table in the database exists, we immediately load data from it into UI
         loaderManager.initLoader(QUAKE_DB_LOADER_ID, null, mQuakeDbLoaderListener);
 
-        // If there is a network connection
-        if (QuakeUtils.isNetworkAvailableAndConnected(getActivity())) {
-            // Start new quake net loader or restart existing (start loading data from the internet)
-            // and set a listener for loader callbacks.
-            loaderManager.restartLoader(QUAKE_NET_LOADER_ID, null, mQuakeNetLoaderListener);
-        }
+        // Start fetching data from the network
+        YellowstoneSyncAdapter.syncImmediately(getActivity());
+
+        // After fetching data from the network is complete, UI gets updated automatically. How?
+        // In quake ContentProvider query(...) method we set notification URI
+        // in the returning cursor by calling cursor.setNotificationUri(...).
+        // Quake CursorLoader (that loads data from the database) gets this cursor back
+        // and registers an observer in ContentResolver.
+        // When QuakeFetcher deletes and writes data into quake table,
+        // ContentProvider notifies ContentResolver about changes by calling
+        // getContext().getContentResolver().notifyChange(uri, null) in insert(...) and delete(...).
+        // ContentResolver notifies all registered observers.
+        // Observer, registered by CursorLoader, forces it to load new data.
     }
 
     @Override
@@ -258,45 +264,15 @@ public class QuakeListFragment extends Fragment {
     }
 
 
-    // Listens to LoaderManager callbacks for quake net loader
-    private class QuakeNetLoaderListener implements LoaderManager.LoaderCallbacks<Void> {
-
-        // Returns new quake net loader
-        @Override
-        public Loader<Void> onCreateLoader(int id, Bundle args) {
-            // Create and return new loader that loads quakes from the network
-            return new QuakeNetLoader(getActivity());
-        }
-
-        // Method is called, when load is finished
-        @Override
-        public void onLoadFinished(Loader<Void> loader, Void data) {
-            // UI gets updated automatically after fetching data from the network.
-            // In quake ContentProvider query(...) method we set notification URI
-            // in the returning cursor by calling cursor.setNotificationUri(...).
-            // Quake CursorLoader (that loads data from the database) gets this cursor back
-            // and registers an observer in ContentResolver.
-            // When QuakeNetLoader deletes and writes data into quake table,
-            // ContentProvider notifies ContentResolver about changes by calling
-            // getContext().getContentResolver().notifyChange(uri, null) in insert(...) and delete(...).
-            // ContentResolver notifies all registered observers.
-            // Observer, registered by CursorLoader, forces it to load new data.
-        }
-
-        // Method is called when data from loader is no longer valid
-        @Override
-        public void onLoaderReset(Loader<Void> loader) {
-
-        }
-    }
-
-
     // Listens to LoaderManager callbacks for quake database loader
     private class QuakeDbLoaderListener implements LoaderManager.LoaderCallbacks<Cursor> {
 
         // Returns new quake database loader
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+            Log.i(LOG_TAG, "New CursorLoader created");
+
             // Create and return new cursor loader that loads quakes from quake table in the database
             return new CursorLoader(getActivity(),
                     QuakeEntry.CONTENT_URI,
@@ -309,6 +285,9 @@ public class QuakeListFragment extends Fragment {
         // Method is called, when load is finished
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+            Log.i(LOG_TAG, "CursorLoader finished loading from database");
+
             // Swap cursor for the RecyclerView adapter
             mQuakeAdapter.swapCursor(data);
         }
@@ -316,6 +295,9 @@ public class QuakeListFragment extends Fragment {
         // Method is called when data from loader is no longer valid
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
+
+            Log.i(LOG_TAG, "Reset CursorLoader");
+
             // Swap for the RecyclerView adapter with null value
             // (to release previously used cursor)
             mQuakeAdapter.swapCursor(null);

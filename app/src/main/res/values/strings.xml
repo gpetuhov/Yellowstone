@@ -59,4 +59,8 @@
     <!--Quake notification text-->
     <string name="quake_notification_text">New earthquakes in Yellowstone</string>
 
+    <!-- Account type (for SyncAdapter authenticator) -->
+    <string name="sync_account_type">yellowstone.gpetuhov.com</string>
+    <string name="content_authority">com.gpetuhov.android.yellowstone</string>
+
 </resources>
