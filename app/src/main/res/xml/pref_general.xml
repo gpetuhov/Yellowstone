@@ -14,10 +14,12 @@
         android:entries="@array/pref_magnitude_options"
         android:entryValues="@array/pref_magnitude_values"/>
 
-    <!--Notification of new earthquakes setting-->
-    <CheckBoxPreference
-        android:key="@string/pref_quake_notify_key"
-        android:title="@string/pref_quake_notify_label"
-        android:defaultValue="false"/>
+    <!--Refresh quake list setting-->
+    <ListPreference
+        android:title="@string/pref_refresh_quake_label"
+        android:key="@string/pref_refresh_quake_key"
+        android:defaultValue="@string/pref_refresh_quake_value_1"
+        android:entries="@array/pref_refresh_quake_options"
+        android:entryValues="@array/pref_refresh_quake_values"/>
 
 </PreferenceScreen>

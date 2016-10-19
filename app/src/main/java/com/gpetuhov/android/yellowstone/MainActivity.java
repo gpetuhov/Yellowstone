@@ -9,6 +9,8 @@ import android.support.v7.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.gpetuhov.android.yellowstone.sync.YellowstoneSyncAdapter;
+
 
 // Main activity with Tabs and ViewPager
 public class MainActivity extends VisibleActivity {
@@ -71,6 +73,15 @@ public class MainActivity extends VisibleActivity {
 
         // Connect TabLayout with ViewPager
         tabLayout.setupWithViewPager(mViewPager);
+
+        // Get ID of the most recent earthquake from SharedPreferences
+        String lastResultID = QuakeUtils.getLastResultId(this);
+
+        // If ID of the most recent earthquake is null (previously no quakes were fetched)
+        if (lastResultID == null) {
+            // Start fetching data from the network
+            YellowstoneSyncAdapter.syncImmediately(this);
+        }
     }
 
 

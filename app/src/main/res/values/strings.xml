@@ -35,20 +35,38 @@
     <!--Value for all magnitudes in SharedPreferences-->
     <string name="pref_magnitude_value_1">0</string>
 
-    <!--Value for magnitudes 2.5+ in SharedPreferences-->
+    <!--Value for magnitudes 2+ in SharedPreferences-->
     <string name="pref_magnitude_value_2">2</string>
 
-    <!--Value for magnitudes 4.5+ in SharedPreferences-->
+    <!--Value for magnitudes 4+ in SharedPreferences-->
     <string name="pref_magnitude_value_3">4</string>
 
 
-    <!--Quake notifications settings-->
+    <!--Refresh quake list settings-->
 
-    <!--Key for storing quake notifications settings in SharedPreference-->
-    <string name="pref_quake_notify_key">quake_notify</string>
+    <!--Title of refresh quake list settings-->
+    <string name="pref_refresh_quake_label">Refresh quakes</string>
 
-    <!--Title of quake notifications settings-->
-    <string name="pref_quake_notify_label">Notify of new quakes</string>
+    <!--Key for storing refresh quake list settings in SharedPreferences-->
+    <string name="pref_refresh_quake_key">refresh_quakes_list</string>
+
+    <!--Label 1 for refresh quake list setting-->
+    <string name="pref_refresh_quake_label_1">Never</string>
+
+    <!--Label 2 for refresh quake list setting-->
+    <string name="pref_refresh_quake_label_2">Every hour</string>
+
+    <!--Label 3 for refresh quake list setting-->
+    <string name="pref_refresh_quake_label_3">Every 3 hours</string>
+
+    <!--Value 1 for refresh quake list setting in SharedPreferences-->
+    <string name="pref_refresh_quake_value_1">0</string>
+
+    <!--Value 2 for refresh quake list setting in SharedPreferences-->
+    <string name="pref_refresh_quake_value_2">1</string>
+
+    <!--Value 3 for refresh quake list setting in SharedPreferences-->
+    <string name="pref_refresh_quake_value_3">3</string>
 
 
     <!--Quake notification text-->

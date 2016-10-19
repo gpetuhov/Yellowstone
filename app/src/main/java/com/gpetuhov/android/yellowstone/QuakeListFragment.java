@@ -1,6 +1,7 @@
 package com.gpetuhov.android.yellowstone;
 
 
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -8,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -17,7 +19,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
-import com.gpetuhov.android.yellowstone.sync.YellowstoneSyncAdapter;
 
 // Fragment contains list of earthquakes.
 // This fragment implements LoaderManager callbacks to update UI with data from loader.
@@ -65,9 +66,6 @@ public class QuakeListFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Start or stop quake notifications service
-        QuakePollService.setServiceAlarm(getActivity());
-
         // Create new quake database loader listener
         mQuakeDbLoaderListener = new QuakeDbLoaderListener();
     }
@@ -83,15 +81,10 @@ public class QuakeListFragment extends Fragment {
         LoaderManager loaderManager = getActivity().getSupportLoaderManager();
 
         // Initialize quake database loader and set a listener for loader callbacks.
-        // If the loader with the passed ID exists and the data is ready,
-        // initLoader immediately pushes data to onLoadFinished callback method.
-        // If not, loader is created and starts loading data.
-        // So, if quake table in the database exists, we immediately load data from it into UI
-        loaderManager.initLoader(QUAKE_DB_LOADER_ID, null, mQuakeDbLoaderListener);
+        // restartLoader always reloads data.
+        loaderManager.restartLoader(QUAKE_DB_LOADER_ID, null, mQuakeDbLoaderListener);
 
-        // Start fetching data from the network
-        YellowstoneSyncAdapter.syncImmediately(getActivity());
-
+        // Fetching data from the network is triggered in host activity's onCreate method.
         // After fetching data from the network is complete, UI gets updated automatically. How?
         // In quake ContentProvider query(...) method we set notification URI
         // in the returning cursor by calling cursor.setNotificationUri(...).
@@ -273,12 +266,28 @@ public class QuakeListFragment extends Fragment {
 
             Log.i(LOG_TAG, "New CursorLoader created");
 
+            // Get default SharedPreferences
+            SharedPreferences sharedPrefs =
+                    PreferenceManager.getDefaultSharedPreferences(getActivity());
+
+            // Get magnitude preference value from SharedPreference by the key
+            // (default value is value_1 (minimum magnitude = 0, that is all magnitudes)
+            String minMagnitude = sharedPrefs.getString(
+                    getActivity().getString(R.string.pref_magnitude_key),
+                    getActivity().getString(R.string.pref_magnitude_value_1));
+
+            // Build selection (WHERE clause)
+            String selection = QuakeEntry.COLUMN_MAGNITUDE + " >= ?";    // WHERE mag >=
+
+            // Build selection arguments (arguments of the condition of WHERE clause).
+            String[] selectionArgs = new String[] { minMagnitude };
+
             // Create and return new cursor loader that loads quakes from quake table in the database
             return new CursorLoader(getActivity(),
                     QuakeEntry.CONTENT_URI,
                     null,
-                    null,
-                    null,
+                    selection,
+                    selectionArgs,
                     null);
         }
 

@@ -41,6 +41,9 @@ public class QuakeUtils {
     // Key for the most recent earthquake ID in SharedPreferences
     public static final String PREF_LAST_RESULT_ID = "last_result_id";
 
+    // Key for the new quakes fetched flag in SharedPreferences
+    public static final String PREF_NEW_QUAKES_FETCHED_FLAG = "new_quakes_fetched_flag";
+
     // Return Caldera latitude converted to double
     public static double getCalderaLatDouble() {
         return Double.parseDouble(CALDERA_LATITUDE);
@@ -194,6 +197,19 @@ public class QuakeUtils {
                 .apply();
     }
 
+    // Return new quakes fetched flag from SharedPreferences
+    public static Boolean getNewQuakesFetchedFlag(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(PREF_NEW_QUAKES_FETCHED_FLAG, false);
+    }
+
+    // Set new quakes fetched flag in SharedPreferences
+    public static void setNewQuakesFetchedFlag(Context context, Boolean flagValue) {
+        PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(PREF_NEW_QUAKES_FETCHED_FLAG, flagValue)
+                .apply();
+    }
 
     // Return content values to write Quake object into database
     public static ContentValues getQuakeContentValues(Quake quake) {

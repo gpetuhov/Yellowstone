@@ -33,7 +33,7 @@ public class QuakePollService extends IntentService {
     public static final long POLL_INTERVAL_HOUR = AlarmManager.INTERVAL_HOUR;
 
     // Polling interval in milliseconds
-    public static final long POLL_INTERVAL = POLL_INTERVAL_HOUR;
+    public static final long POLL_INTERVAL = POLL_INTERVAL_60SEC;
 
     // Key for notification request code in outgoing intent
     public static final String REQUEST_CODE = "REQUEST_CODE";
@@ -67,21 +67,28 @@ public class QuakePollService extends IntentService {
         // Get reference to AlarmManager
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
-        // Get quake notifications settings from SharedPreferences
-        boolean isOn = PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(context.getString(R.string.pref_quake_notify_key), false);
+        // Get quake poll interval (in hours) from SharedPreferences
+        int pollInterval = Integer.parseInt(
+                PreferenceManager.getDefaultSharedPreferences(context)
+                        .getString(context.getString(R.string.pref_refresh_quake_key),
+                                context.getString(R.string.pref_refresh_quake_value_1))
+        );
 
-        // If quake notifications are on
-        if (isOn) {
+        // If quake poll interval != 0 (not set to "never")
+        if (pollInterval != 0) {
+
+            // Poll interval in milliseconds
+            long pollIntervalMillis = pollInterval * POLL_INTERVAL_HOUR;
 
             // Turn on AlarmManager for inexact repeating
-            // (every POLL_INTERVAL AlarmManager will send pending request to start this service).
+            // (every poll interval AlarmManager will send pending request to start this service).
             // Time based is set to elapsed time since last system startup.
+            // First time AlarmManager will trigger after first poll interval from current time.
             alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME,
-                    SystemClock.elapsedRealtime(), POLL_INTERVAL, pi);
+                    SystemClock.elapsedRealtime(), pollIntervalMillis, pi);
 
         } else {
-            // Otherwise turn AlarmManager off
+            // Otherwise (poll interval is set to "never") turn AlarmManager off
 
             // Cancel AlarmManager
             alarmManager.cancel(pi);
@@ -99,60 +106,45 @@ public class QuakePollService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
-        // Check if network is available and connected
+        // Fetch new list of quakes from the network.
         // Method needs context to work, so we pass this service into it,
         // because Service is a Context.
-        if (QuakeUtils.isNetworkAvailableAndConnected(this)) {
+        new QuakeFetcher().fetchQuakes(this);
 
-            // Get ID of the most recent earthquake from SharedPreferences
-            String lastResultID = QuakeUtils.getLastResultId(this);
+        // If new quakes fetched flag in SharedPreferences is "true"
+        if (QuakeUtils.getNewQuakesFetchedFlag(this)) {
+            // Got a new result
 
-            // Fetch new list of quakes from the network
-            // and save ID of the most recent earthquake.
-            String resultId = new QuakeFetcher().fetchQuakes(this);
+            // Post log statement
+            Log.i(LOG_TAG, "Got a new result");
 
-            // If this ID is null (data fetching failed), return
-            if (resultId == null) {
-                return;
-            }
+            // Get reference to resources
+            Resources resources = getResources();
 
-            // If ID of the most recent earthquake in just fetched list
-            // is not equal to the ID of the most recent earthquake in last time fetched list
-            if (!resultId.equals(lastResultID)) {
-                // Got a new result
+            // Create new intent to start MainActivity
+            Intent i = MainActivity.newIntent(this);
 
-                // Post log statement
-                Log.i(LOG_TAG, "Got a new result");
+            // Create new pending intent with this intent to start new activity
+            PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
 
-                // Get reference to resources
-                Resources resources = getResources();
+            // Build new notification
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setTicker(resources.getString(R.string.quake_notification_title))
+                    .setSmallIcon(android.R.drawable.ic_menu_report_image)
+                    .setContentTitle(resources.getString(R.string.quake_notification_title))
+                    .setContentText(resources.getString(R.string.quake_notification_text))
+                    .setContentIntent(pi)
+                    .setAutoCancel(true)
+                    .build();
 
-                // Create new intent to start MainActivity
-                Intent i = MainActivity.newIntent(this);
+            // Send ordered broadcast with this notification
+            showBackgroundNotification(QUAKE_NOTIFICATION_ID, notification);
 
-                // Create new pending intent with this intent to start new activity
-                PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
-
-                // Build new notification
-                Notification notification = new NotificationCompat.Builder(this)
-                        .setTicker(resources.getString(R.string.quake_notification_title))
-                        .setSmallIcon(android.R.drawable.ic_menu_report_image)
-                        .setContentTitle(resources.getString(R.string.quake_notification_title))
-                        .setContentText(resources.getString(R.string.quake_notification_text))
-                        .setContentIntent(pi)
-                        .setAutoCancel(true)
-                        .build();
-
-                // Send ordered broadcast with this notification
-                showBackgroundNotification(QUAKE_NOTIFICATION_ID, notification);
-
-            } else {
-                // Otherwise got and old result, do nothing, only post log statement
-                Log.i(LOG_TAG, "Got an old result");
-            }
+        } else {
+            // Otherwise got and old result, do nothing, only post log statement
+            Log.i(LOG_TAG, "Got an old result");
         }
     }
-
 
     // Create new outgoing broadcast intent and send ordered broadcast with it
     private void showBackgroundNotification(int requestCode, Notification notification) {

@@ -1,7 +1,6 @@
 package com.gpetuhov.android.yellowstone;
 
 import android.os.Bundle;
-import android.support.v7.preference.CheckBoxPreference;
 import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
@@ -27,6 +26,10 @@ public class SettingsFragment extends PreferenceFragmentCompat
         // Get magnitude preference key, find preference with this key
         // and bind this preference (magnitude preference) summary to value
         bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_magnitude_key)));
+
+        // Get refresh quake list preference key, find preference with this key
+        // and bind this preference (refresh quake list preference) summary to value
+        bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_refresh_quake_key)));
     }
 
 
@@ -38,20 +41,19 @@ public class SettingsFragment extends PreferenceFragmentCompat
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(this);
 
-        // Trigger the listener immediately with the preference's current value
+        // Display current preference value in Summary
         // (get default SharedPreferences with context of the app,
         // get string with the key from the preference from SharedPreferences
         // and update preference summary with this string (current value of the preference)).
-        onPreferenceChange(preference,
+        displaySummary(preference,
                 PreferenceManager
                         .getDefaultSharedPreferences(getActivity())
                         .getString(preference.getKey(), ""));
     }
 
 
-    // Method is called when a preference changes
-    @Override
-    public boolean onPreferenceChange(Preference preference, Object value) {
+    // Display value of the preference in the preference Summary
+    private void displaySummary(Preference preference, Object value) {
 
         // Cast new value of the preference to String
         String stringValue = value.toString();
@@ -73,10 +75,18 @@ public class SettingsFragment extends PreferenceFragmentCompat
                 // and set this entry as a new summary of the preference.
                 preference.setSummary(listPreference.getEntries()[prefIndex]);
             }
+        }
+    }
 
-        } else if (preference instanceof CheckBoxPreference) {
-            // If the preference is instance of CheckBoxPreference (quake notifications settings)
+    // Method is called when a preference changes
+    @Override
+    public boolean onPreferenceChange(Preference preference, Object value) {
 
+        // Display current preference value in Summary
+        displaySummary(preference, value);
+
+        // If the preference key equals to refresh quake list preference key
+        if (preference.getKey().equals(getString(R.string.pref_refresh_quake_key))) {
             // Set quake notifications service (start or stop depending on settings value)
             QuakePollService.setServiceAlarm(getActivity());
         }

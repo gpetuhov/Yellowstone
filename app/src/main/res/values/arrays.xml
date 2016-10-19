@@ -17,4 +17,21 @@
         <item>@string/pref_magnitude_value_3</item>
     </string-array>
 
+
+    <!--Arrays for refresh quake list settings-->
+
+    <!--Refresh quake list settings options-->
+    <string-array name="pref_refresh_quake_options">
+        <item>@string/pref_refresh_quake_label_1</item>
+        <item>@string/pref_refresh_quake_label_2</item>
+        <item>@string/pref_refresh_quake_label_3</item>
+    </string-array>
+
+    <!--Refresh quake list settings values-->
+    <string-array name="pref_refresh_quake_values">
+        <item>@string/pref_refresh_quake_value_1</item>
+        <item>@string/pref_refresh_quake_value_2</item>
+        <item>@string/pref_refresh_quake_value_3</item>
+    </string-array>
+
 </resources>
