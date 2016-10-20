@@ -119,16 +119,21 @@ public class QuakeListFragment extends Fragment {
         // Get access to TextView for empty view
         mEmptyView = (TextView) v.findViewById(R.id.empty_view);
 
-        // If there is a network connection, display RecyclerView with data from USGS server
-        if (QuakeUtils.isNetworkAvailableAndConnected(getActivity())) {
+        // Get ID of the most recent earthquake from SharedPreferences
+        String lastResultID = QuakeUtils.getLastResultId(getActivity());
+
+        // If ID of the most recent earthquake is not null (previously some quakes were fetched)
+        if (lastResultID != null) {
+            // Display RecyclerView with data from USGS server
+
             // Display RecyclerView
             mQuakeRecyclerView.setVisibility(View.VISIBLE);
 
             // Hide empty view
             mEmptyView.setVisibility(View.GONE);
 
-        } else {
-            // Otherwise, display error
+        } else if (!QuakeUtils.isNetworkAvailableAndConnected(getActivity())) {
+            // Otherwise if there is no network connection, display error
 
             // Hide RecyclerView
             mQuakeRecyclerView.setVisibility(View.GONE);
