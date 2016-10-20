@@ -61,6 +61,9 @@ public class MainActivity extends VisibleActivity {
                         .edit()
                         .putInt(PREF_LAST_PAGE, position)
                         .apply();
+
+                // Make activity recreate menu
+                invalidateOptionsMenu();
             }
 
             @Override
@@ -99,6 +102,9 @@ public class MainActivity extends VisibleActivity {
 
         // Update ViewPager position with new value
         mViewPager.setCurrentItem(position);
+
+        // Make activity recreate menu
+        invalidateOptionsMenu();
     }
 
 
@@ -108,6 +114,16 @@ public class MainActivity extends VisibleActivity {
 
         // Inflate the menu
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        // If current view pager position is quake list
+        if (mViewPager.getCurrentItem() == 0) {
+            // Enable refresh button
+            menu.findItem(R.id.action_refresh).setVisible(true);
+
+        } else {
+            // Otherwise disable refresh button
+            menu.findItem(R.id.action_refresh).setVisible(false);
+        }
 
         return true;
     }
@@ -128,6 +144,15 @@ public class MainActivity extends VisibleActivity {
 
             // Start settings activity
             startActivity(intent);
+
+            return true;
+        }
+
+        // If user selected refresh button
+        if (id == R.id.action_refresh) {
+
+            // Fetch data from the network
+            YellowstoneSyncAdapter.syncImmediately(this);
 
             return true;
         }

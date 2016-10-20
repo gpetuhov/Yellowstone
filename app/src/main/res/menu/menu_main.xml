@@ -5,8 +5,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!--Main actitiy's menu has only one item - "Settings",
-    which is shown in overflow menu-->
+    <!--Item - "Refresh" is shown in toolbar if there is room
+    (if not, it is shown in overflow menu)-->
+    <item
+        android:id="@+id/action_refresh"
+        android:icon="@drawable/ic_action_refresh"
+        android:title="@string/action_refresh"
+        app:showAsAction="ifRoom"/>
+
+    <!--Item - "Settings" is shown in overflow menu-->
     <item
         android:id="@+id/action_settings"
         android:title="@string/action_settings"
