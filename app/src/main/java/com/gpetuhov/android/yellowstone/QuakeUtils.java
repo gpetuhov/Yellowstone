@@ -8,7 +8,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.support.v7.preference.PreferenceManager;
-import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -172,7 +171,6 @@ public class QuakeUtils {
             jsonResponse = response.body().string();
         } catch (IOException e) {
             // Nothing to return
-            Log.e(logTag, "Error fetching JSON string", e);
             return null;
         }
 

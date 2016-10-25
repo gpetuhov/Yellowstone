@@ -2,7 +2,6 @@ package com.gpetuhov.android.yellowstone;
 
 
 import android.net.Uri;
-import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -89,8 +88,6 @@ public class PhotoFetcher {
             }
 
         } catch (JSONException e) {
-            // Catch JSON parsing errors
-            Log.e(LOG_TAG, "Failed to parse JSON", e);
         }
 
         // Return the list of photos

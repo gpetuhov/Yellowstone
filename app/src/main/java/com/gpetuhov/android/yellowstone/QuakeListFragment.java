@@ -12,7 +12,6 @@ import android.support.v4.content.Loader;
 import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,9 +24,6 @@ import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 // Host of this fragment must implement its Callbacks interface
 // and set itself as a listener for the callbacks.
 public class QuakeListFragment extends Fragment {
-
-    // Tag for log messages
-    public static final String LOG_TAG = "QuakeDataLoad";
 
     // Quake database loader ID
     public static final int QUAKE_DB_LOADER_ID = 1;
@@ -269,8 +265,6 @@ public class QuakeListFragment extends Fragment {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-            Log.i(LOG_TAG, "New CursorLoader created");
-
             // Get default SharedPreferences
             SharedPreferences sharedPrefs =
                     PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -299,9 +293,6 @@ public class QuakeListFragment extends Fragment {
         // Method is called, when load is finished
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-
-            Log.i(LOG_TAG, "CursorLoader finished loading from database");
-
             // Swap cursor for the RecyclerView adapter
             mQuakeAdapter.swapCursor(data);
         }
@@ -309,9 +300,6 @@ public class QuakeListFragment extends Fragment {
         // Method is called when data from loader is no longer valid
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-
-            Log.i(LOG_TAG, "Reset CursorLoader");
-
             // Swap for the RecyclerView adapter with null value
             // (to release previously used cursor)
             mQuakeAdapter.swapCursor(null);

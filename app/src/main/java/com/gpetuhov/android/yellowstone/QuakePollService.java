@@ -11,7 +11,6 @@ import android.content.res.Resources;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.preference.PreferenceManager;
-import android.util.Log;
 
 
 // Service checks for new earthquakes and sends notifications to user
@@ -115,9 +114,6 @@ public class QuakePollService extends IntentService {
         if (QuakeUtils.getNewQuakesFetchedFlag(this)) {
             // Got a new result
 
-            // Post log statement
-            Log.i(LOG_TAG, "Got a new result");
-
             // Get reference to resources
             Resources resources = getResources();
 
@@ -141,8 +137,7 @@ public class QuakePollService extends IntentService {
             showBackgroundNotification(QUAKE_NOTIFICATION_ID, notification);
 
         } else {
-            // Otherwise got and old result, do nothing, only post log statement
-            Log.i(LOG_TAG, "Got an old result");
+            // Otherwise got and old result, do nothing
         }
     }
 

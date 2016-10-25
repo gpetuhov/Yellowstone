@@ -4,7 +4,6 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
-import android.util.Log;
 
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
@@ -120,7 +119,6 @@ public class QuakeFetcher {
 
         } catch (JSONException e) {
             // Catch JSON parsing errors
-            Log.e(LOG_TAG, "Failed to parse JSON", e);
         }
 
         // If quakes content values list is not empty

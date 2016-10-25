@@ -8,7 +8,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SyncResult;
 import android.os.Bundle;
-import android.util.Log;
 
 import com.gpetuhov.android.yellowstone.QuakeFetcher;
 import com.gpetuhov.android.yellowstone.R;
@@ -16,9 +15,6 @@ import com.gpetuhov.android.yellowstone.R;
 
 // SyncAdapter handles the transfer of data between a server and the app
 public class YellowstoneSyncAdapter extends AbstractThreadedSyncAdapter {
-
-    // Tag for log messages
-    public static final String LOG_TAG = "QuakeDataLoad";
 
     public YellowstoneSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
@@ -28,9 +24,6 @@ public class YellowstoneSyncAdapter extends AbstractThreadedSyncAdapter {
     // Performs data transfer. The entire sync adapter runs in a background thread.
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-
-        Log.i(LOG_TAG, "SyncAdapter started fetching data");
-
         // Create new QuakeFetcher object and fetch data
         new QuakeFetcher().fetchQuakes(getContext());
     }
