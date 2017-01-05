@@ -25,8 +25,8 @@ public class MainActivity extends VisibleActivity {
     private ViewPager mViewPager;
 
 
-    // Return new intent with to start this activity
-    public static Intent newIntent (Context context) {
+    // Return new intent to start this activity
+    public static Intent newIntent(Context context) {
 
         // Create explicit intent to start this activity
         Intent intent = new Intent(context, MainActivity.class);

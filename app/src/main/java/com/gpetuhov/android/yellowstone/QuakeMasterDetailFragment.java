@@ -13,7 +13,8 @@ import android.view.ViewGroup;
 // Contains nested fragments:
 // On phone: nested fragment with list of quakes
 // On tablet: nested fragment with list of quakes and nested fragment with details
-// This fragment is the host for QuakeListFragment, so it must implement its Callbacks interface
+// This fragment is the host for QuakeListFragment, so it must implement its Callbacks interface,
+// and it must register itself as a listener to quake list item clicks in QuakeListFragment.
 public class QuakeMasterDetailFragment extends Fragment
         implements QuakeListFragment.Callbacks {
 
@@ -63,7 +64,7 @@ public class QuakeMasterDetailFragment extends Fragment
     }
 
     // Method is called, when an item of RecyclerView in QuakeListFragment is clicked.
-    // Depending of the device (phone or tablet),
+    // Depending on the device (phone or tablet),
     // we must either start new activity with quake details (on phone),
     // or display new child fragment with quake details in the corresponding FrameLayout.
     @Override

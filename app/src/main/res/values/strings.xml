@@ -46,7 +46,7 @@
     <!--Refresh quake list settings-->
 
     <!--Title of refresh quake list settings-->
-    <string name="pref_refresh_quake_label">Refresh quakes</string>
+    <string name="pref_refresh_quake_label">Refresh earthquakes</string>
 
     <!--Key for storing refresh quake list settings in SharedPreferences-->
     <string name="pref_refresh_quake_key">refresh_quakes_list</string>

@@ -19,6 +19,10 @@ import android.widget.TextView;
 
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
+
 // Fragment contains list of earthquakes.
 // This fragment implements LoaderManager callbacks to update UI with data from loader.
 // Host of this fragment must implement its Callbacks interface
@@ -29,13 +33,16 @@ public class QuakeListFragment extends Fragment {
     public static final int QUAKE_DB_LOADER_ID = 1;
 
     // RecyclerView for the list of earthquakes
-    private RecyclerView mQuakeRecyclerView;
+    @BindView(R.id.quake_recycler_view) RecyclerView mQuakeRecyclerView;
+
+    // Empty view text (displayed when there is no data for RecyclerView)
+    @BindView(R.id.empty_view) TextView mEmptyView;
+
+    // Keeps Unbinder object to properly unbind views in onDestroyView of the fragment
+    private Unbinder mUnbinder;
 
     // Adapter for the RecyclerView
     private QuakeAdapter mQuakeAdapter;
-
-    // Empty view text (displayed when there is no data for RecyclerView)
-    private TextView mEmptyView;
 
     // Listener to LoaderManager callbacks for quake database loader
     private QuakeDbLoaderListener mQuakeDbLoaderListener;
@@ -43,7 +50,6 @@ public class QuakeListFragment extends Fragment {
     // Stores reference to a host that uses this fragment
     // Host must implement Callbacks interface
     private Callbacks mCallbacks;
-
 
     // This interface must be implemented by the host (activity or parent fragment) that uses this fragment
     public interface Callbacks {
@@ -103,17 +109,14 @@ public class QuakeListFragment extends Fragment {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_quake_list, container, false);
 
-        // Get access to RecyclerView
-        mQuakeRecyclerView = (RecyclerView) v.findViewById(R.id.quake_recycler_view);
+        // Bind views and save reference to Unbinder object
+        mUnbinder = ButterKnife.bind(this, v);
 
         // Set LinearLayoutManager for our RecyclerView (we need vertical scroll list)
         mQuakeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         // Attach adapter to the RecyclerView
         mQuakeRecyclerView.setAdapter(mQuakeAdapter);
-
-        // Get access to TextView for empty view
-        mEmptyView = (TextView) v.findViewById(R.id.empty_view);
 
         // Get ID of the most recent earthquake from SharedPreferences
         String lastResultID = QuakeUtils.getLastResultId(getActivity());
@@ -141,25 +144,32 @@ public class QuakeListFragment extends Fragment {
         return v;
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        // This is recommended to do here when using Butterknife in fragments
+        mUnbinder.unbind();
+    }
 
     // === Inner classes =====================
 
     // ViewHolder for our RecyclerView with list of earthquakes
     // Our ViewHolder implements View.OnClickListener to handle clicks on list items
-    private class QuakeHolder extends RecyclerView.ViewHolder
+    class QuakeHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
 
         // Stores earthquake for this ViewHolder
         private Quake mQuake;
 
         // TextView for the magnitude of the earthquake
-        public TextView mMagnitudeTextView;
+        @BindView(R.id.magnitude) public TextView mMagnitudeTextView;
 
         // TextView for the location of the earthquake
-        public TextView mLocationTextView;
+        @BindView(R.id.location) public TextView mLocationTextView;
 
         // TextView for the date of the earthquake
-        public TextView mDateTextView;
+        @BindView(R.id.date) public TextView mDateTextView;
 
         public QuakeHolder(View itemView) {
             super(itemView);
@@ -168,9 +178,7 @@ public class QuakeListFragment extends Fragment {
             itemView.setOnClickListener(this);
 
             // Get access to TextViews in itemView
-            mMagnitudeTextView = (TextView) itemView.findViewById(R.id.magnitude);
-            mLocationTextView = (TextView) itemView.findViewById(R.id.location);
-            mDateTextView = (TextView) itemView.findViewById(R.id.date);
+            ButterKnife.bind(this, itemView);
         }
 
         public void bindQuake(Quake quake) {
