@@ -3,7 +3,6 @@ package com.gpetuhov.android.yellowstone;
 import android.os.Bundle;
 
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 
 
@@ -20,25 +19,17 @@ public class QuakeMapFragment extends SupportMapFragment {
         super.onCreate(bundle);
 
         // Asynchronously get reference to the map
-        getMapAsync(new OnMapReadyCallback() {
-            @Override
-            public void onMapReady(GoogleMap googleMap) {
-                // When the map is ready, get reference to it
-                mGoogleMap = googleMap;
+        getMapAsync(googleMap -> {
+            // When the map is ready, get reference to it
+            mGoogleMap = googleMap;
 
-                // Enable zoom buttons
-                mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
+            // Enable zoom buttons
+            mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
 
-                // When the map is loaded, update it with all earthquakes from quake table.
-                // To do this, we must set OnMapLoadedCallback listener for the map
-                // and override its onMapLoaded method.
-                mGoogleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
-                    @Override
-                    public void onMapLoaded() {
-                        QuakeUtils.updateMap(getActivity(), mGoogleMap, null);
-                    }
-                });
-            }
+            // When the map is loaded, update it with all earthquakes from quake table.
+            // To do this, we must set OnMapLoadedCallback listener for the map
+            // and override its onMapLoaded method.
+            mGoogleMap.setOnMapLoadedCallback(() -> QuakeUtils.updateMap(getActivity(), mGoogleMap, null));
         });
     }
 }
