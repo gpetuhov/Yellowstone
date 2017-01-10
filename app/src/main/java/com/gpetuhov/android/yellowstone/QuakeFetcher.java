@@ -3,6 +3,7 @@ package com.gpetuhov.android.yellowstone;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
@@ -25,7 +26,7 @@ public class QuakeFetcher {
     public static final String USGS_QUERY_URL = "http://earthquake.usgs.gov/fdsnws/event/1/query";
 
     // Build default request URL to USGS server
-    public String buildDefaultRequestUrl() {
+    public String buildRequestUrl() {
 
         // For USGS query parameters see http://earthquake.usgs.gov/fdsnws/event/1/
 
@@ -41,23 +42,11 @@ public class QuakeFetcher {
         return defaultUrl;
     }
 
-    // Build request URL for all earthquakes in the world since specified date
-    private String buildAllWorldRequestUrl() {
-
-        final String requestUrl = Uri.parse(USGS_QUERY_URL)
-                .buildUpon()
-                .appendQueryParameter("format", "geojson")  // Response format = GeoJSON
-                .appendQueryParameter("starttime", "2016-10-03")  // Response format = GeoJSON
-                .build().toString();
-
-        return requestUrl;
-    }
-
     // Parse JSON response from USGS server,
     // save fetched data into quake table
     // and set new quakes fetched flag in SharedPreferences
     // (this is needed for new earthquakes notifications).
-    public void parseJsonString(Context context, String jsonString) {
+    public void parseJsonString(Context context, SharedPreferences sharedPreferences, String jsonString) {
 
         // Empty ArrayList for ContentValues of the earthquakes
         List<ContentValues> quakesContentValues = new ArrayList<>();
@@ -134,7 +123,7 @@ public class QuakeFetcher {
             if (resultId != null) {
 
                 // Get ID of the most recent earthquake from SharedPreferences
-                String lastResultID = QuakeUtils.getLastResultId(context);
+                String lastResultID = QuakeUtils.getLastResultId(sharedPreferences);
 
                 // If ID of the most recent earthquake in just fetched list
                 // is not equal to the ID of the most recent earthquake in last time fetched list
@@ -142,7 +131,7 @@ public class QuakeFetcher {
                     // New quakes fetched
 
                     // Set new quakes fetched flag in SharedPreferences to "true"
-                    QuakeUtils.setNewQuakesFetchedFlag(context, true);
+                    QuakeUtils.setNewQuakesFetchedFlag(sharedPreferences, true);
 
                     // Get content resolver for the application context
                     ContentResolver contentResolver = context.getContentResolver();
@@ -164,11 +153,11 @@ public class QuakeFetcher {
                     // No new quakes fetched
 
                     // Set new quakes fetched flag in SharedPreferences to "false"
-                    QuakeUtils.setNewQuakesFetchedFlag(context, false);
+                    QuakeUtils.setNewQuakesFetchedFlag(sharedPreferences, false);
                 }
 
                 // Update ID of the most recent quake in SharedPreferences (replace with new value)
-                QuakeUtils.setLastResultId(context, resultId);
+                QuakeUtils.setLastResultId(sharedPreferences, resultId);
             }
         }
     }
@@ -176,30 +165,16 @@ public class QuakeFetcher {
 
     // Fetch list of earthquakes from USGS server
     // and return ID of the most recent quake
-    public void fetchQuakes(Context context) {
+    public void fetchQuakes(Context context, SharedPreferences sharedPreferences) {
 
         // Build request URL (query to USGS server)
-        String requestURL = buildDefaultRequestUrl();
+        String requestURL = buildRequestUrl();
 
         // Get JSON response from USGS server
         String jsonResponse = QuakeUtils.getJsonString(requestURL, LOG_TAG);
 
         // Parse JSON response and save list of earthquakes
-        parseJsonString(context, jsonResponse);
-    }
-
-
-    // Fetch list of all earthquakes in the world from USGS server
-    public void fetchAllWorldQuakes(Context context) {
-
-        // Build request URL (query to USGS server)
-        String requestURL = buildAllWorldRequestUrl();
-
-        // Get JSON response from USGS server
-        String jsonResponse = QuakeUtils.getJsonString(requestURL, LOG_TAG);
-
-        // Parse JSON response and save list of earthquakes
-        parseJsonString(context, jsonResponse);
+        parseJsonString(context, sharedPreferences, jsonResponse);
     }
 
 }

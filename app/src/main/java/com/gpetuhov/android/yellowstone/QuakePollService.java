@@ -7,14 +7,20 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.preference.PreferenceManager;
 
+import javax.inject.Inject;
+
 
 // Service checks for new earthquakes and sends notifications to user
 public class QuakePollService extends IntentService {
+
+    // Keeps instance of SharedPreferences. Injected by Dagger.
+    @Inject SharedPreferences mSharedPreferences;
 
     // Action constant for outgoing intent to show notification
     public static final String ACTION_SHOW_NOTIFICATION =
@@ -101,6 +107,14 @@ public class QuakePollService extends IntentService {
         super(LOG_TAG);
     }
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        // Inject SharedPreference instance into this service field
+        YellowstoneApp.getAppComponent().inject(this);
+    }
+
     // Method is called when new intent from the queue is ready to be handled
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -108,10 +122,10 @@ public class QuakePollService extends IntentService {
         // Fetch new list of quakes from the network.
         // Method needs context to work, so we pass this service into it,
         // because Service is a Context.
-        new QuakeFetcher().fetchQuakes(this);
+        new QuakeFetcher().fetchQuakes(this, mSharedPreferences);
 
         // If new quakes fetched flag in SharedPreferences is "true"
-        if (QuakeUtils.getNewQuakesFetchedFlag(this)) {
+        if (QuakeUtils.getNewQuakesFetchedFlag(mSharedPreferences)) {
             // Got a new result
 
             // Get reference to resources

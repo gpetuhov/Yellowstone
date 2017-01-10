@@ -6,26 +6,35 @@ import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.SyncResult;
 import android.os.Bundle;
 
 import com.gpetuhov.android.yellowstone.QuakeFetcher;
 import com.gpetuhov.android.yellowstone.R;
+import com.gpetuhov.android.yellowstone.YellowstoneApp;
+
+import javax.inject.Inject;
 
 
 // SyncAdapter handles the transfer of data between a server and the app
 public class YellowstoneSyncAdapter extends AbstractThreadedSyncAdapter {
 
+    // Keeps instance of SharedPreferences. Injected by Dagger.
+    @Inject SharedPreferences mSharedPreferences;
+
     public YellowstoneSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
-    }
 
+        // Inject SharedPreference instance into this sync adapter field
+        YellowstoneApp.getAppComponent().inject(this);
+    }
 
     // Performs data transfer. The entire sync adapter runs in a background thread.
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
         // Create new QuakeFetcher object and fetch data
-        new QuakeFetcher().fetchQuakes(getContext());
+        new QuakeFetcher().fetchQuakes(getContext(), mSharedPreferences);
     }
 
 

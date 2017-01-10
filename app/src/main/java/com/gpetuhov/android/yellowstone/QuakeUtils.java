@@ -3,11 +3,11 @@ package com.gpetuhov.android.yellowstone;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.support.v7.preference.PreferenceManager;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -149,6 +149,12 @@ public class QuakeUtils {
         return isNetworkConnected;
     }
 
+    // Return "true" if network is NOT available and connected
+    public static boolean isNetworkNotAvailableAndConnected(Context context) {
+        boolean isNetworkConnected = isNetworkAvailableAndConnected(context);
+        return !isNetworkConnected;
+    }
+
     // Get JSON response from the requested URL
     public static String getJsonString(String requestedUrl, String logTag) {
 
@@ -179,31 +185,37 @@ public class QuakeUtils {
         return jsonResponse;
     }
 
+    // True, if there are no previously fetched quakes
+    public static boolean isPreviouslyFetchedQuakeNotExist(SharedPreferences sharedPreferences) {
+        // Get ID of the most recent earthquake from SharedPreferences
+        String lastResultID = QuakeUtils.getLastResultId(sharedPreferences);
+
+        // If ID of the most recent earthquake is null, return true
+        return null == lastResultID;
+    }
 
     // Return ID of the most recent fetched earthquake from SharedPreferences
-    public static String getLastResultId(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(PREF_LAST_RESULT_ID, null);
+    public static String getLastResultId(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getString(PREF_LAST_RESULT_ID, null);
     }
 
 
     // Set new value for the ID of the most recent fetched earthquake in SharedPreferences
-    public static void setLastResultId(Context context, String lastResultId) {
-        PreferenceManager.getDefaultSharedPreferences(context)
+    public static void setLastResultId(SharedPreferences sharedPreferences, String lastResultId) {
+        sharedPreferences
                 .edit()
                 .putString(PREF_LAST_RESULT_ID, lastResultId)
                 .apply();
     }
 
     // Return new quakes fetched flag from SharedPreferences
-    public static Boolean getNewQuakesFetchedFlag(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(PREF_NEW_QUAKES_FETCHED_FLAG, false);
+    public static Boolean getNewQuakesFetchedFlag(SharedPreferences sharedPreferences) {
+        return sharedPreferences.getBoolean(PREF_NEW_QUAKES_FETCHED_FLAG, false);
     }
 
     // Set new quakes fetched flag in SharedPreferences
-    public static void setNewQuakesFetchedFlag(Context context, Boolean flagValue) {
-        PreferenceManager.getDefaultSharedPreferences(context)
+    public static void setNewQuakesFetchedFlag(SharedPreferences sharedPreferences, Boolean flagValue) {
+        sharedPreferences
                 .edit()
                 .putBoolean(PREF_NEW_QUAKES_FETCHED_FLAG, flagValue)
                 .apply();

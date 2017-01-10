@@ -2,18 +2,23 @@ package com.gpetuhov.android.yellowstone;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
-import android.support.v7.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.gpetuhov.android.yellowstone.sync.YellowstoneSyncAdapter;
 
+import javax.inject.Inject;
+
 
 // Main activity with Tabs and ViewPager
 public class MainActivity extends VisibleActivity {
+
+    // Keeps instance of SharedPreferences. Injected by Dagger.
+    @Inject SharedPreferences mSharedPreferences;
 
     // Last ViewPager position key in SharedPreferences
     public static final String PREF_LAST_PAGE = "lastViewPagerPosition";
@@ -39,6 +44,9 @@ public class MainActivity extends VisibleActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Inject SharedPreference instance into this activity field
+        YellowstoneApp.getAppComponent().inject(this);
+
         // Get reference to ViewPager
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
 
@@ -57,7 +65,7 @@ public class MainActivity extends VisibleActivity {
             @Override
             public void onPageSelected(int position) {
                 // Save current ViewPager position to SharedPreferences
-                PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
+                mSharedPreferences
                         .edit()
                         .putInt(PREF_LAST_PAGE, position)
                         .apply();
@@ -77,11 +85,8 @@ public class MainActivity extends VisibleActivity {
         // Connect TabLayout with ViewPager
         tabLayout.setupWithViewPager(mViewPager);
 
-        // Get ID of the most recent earthquake from SharedPreferences
-        String lastResultID = QuakeUtils.getLastResultId(this);
-
-        // If ID of the most recent earthquake is null (previously no quakes were fetched)
-        if (lastResultID == null) {
+        // If previously no quakes were fetched
+        if (QuakeUtils.isPreviouslyFetchedQuakeNotExist(mSharedPreferences)) {
             // Start fetching data from the network
             YellowstoneSyncAdapter.syncImmediately(this);
         }
@@ -97,8 +102,7 @@ public class MainActivity extends VisibleActivity {
 
         // Get last ViewPager position from SharedPreferences.
         // If null, return default page number (starting page).
-        int position = PreferenceManager.getDefaultSharedPreferences(this)
-                .getInt(PREF_LAST_PAGE, DEFAULT_PAGE);
+        int position = mSharedPreferences.getInt(PREF_LAST_PAGE, DEFAULT_PAGE);
 
         // Update ViewPager position with new value
         mViewPager.setCurrentItem(position);

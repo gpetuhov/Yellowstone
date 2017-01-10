@@ -19,6 +19,8 @@ import android.widget.TextView;
 
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -31,6 +33,9 @@ public class QuakeListFragment extends Fragment {
 
     // Quake database loader ID
     public static final int QUAKE_DB_LOADER_ID = 1;
+
+    // Keeps instance of SharedPreferences. Injected by Dagger.
+    @Inject SharedPreferences mSharedPreferences;
 
     // RecyclerView for the list of earthquakes
     @BindView(R.id.quake_recycler_view) RecyclerView mQuakeRecyclerView;
@@ -67,6 +72,9 @@ public class QuakeListFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Inject SharedPreference instance into this fragment field
+        YellowstoneApp.getAppComponent().inject(this);
 
         // Create new quake database loader listener
         mQuakeDbLoaderListener = new QuakeDbLoaderListener();
@@ -118,27 +126,26 @@ public class QuakeListFragment extends Fragment {
         // Attach adapter to the RecyclerView
         mQuakeRecyclerView.setAdapter(mQuakeAdapter);
 
-        // Get ID of the most recent earthquake from SharedPreferences
-        String lastResultID = QuakeUtils.getLastResultId(getActivity());
+        // If there are no previously fetched quakes
+        if (QuakeUtils.isPreviouslyFetchedQuakeNotExist(mSharedPreferences)) {
+            // If there is no network connection
+            if (QuakeUtils.isNetworkNotAvailableAndConnected(getActivity())) {
+                // Display error
 
-        // If ID of the most recent earthquake is not null (previously some quakes were fetched)
-        if (lastResultID != null) {
-            // Display RecyclerView with data from USGS server
+                // Hide RecyclerView
+                mQuakeRecyclerView.setVisibility(View.GONE);
+
+                // Display empty view
+                mEmptyView.setVisibility(View.VISIBLE);
+            }
+        } else {
+            // Otherwise display RecyclerView with data from USGS server
 
             // Display RecyclerView
             mQuakeRecyclerView.setVisibility(View.VISIBLE);
 
             // Hide empty view
             mEmptyView.setVisibility(View.GONE);
-
-        } else if (!QuakeUtils.isNetworkAvailableAndConnected(getActivity())) {
-            // Otherwise if there is no network connection, display error
-
-            // Hide RecyclerView
-            mQuakeRecyclerView.setVisibility(View.GONE);
-
-            // Display empty view
-            mEmptyView.setVisibility(View.VISIBLE);
         }
 
         return v;
