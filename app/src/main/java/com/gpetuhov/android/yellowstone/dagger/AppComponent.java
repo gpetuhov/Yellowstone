@@ -1,6 +1,7 @@
 package com.gpetuhov.android.yellowstone.dagger;
 
 import com.gpetuhov.android.yellowstone.MainActivity;
+import com.gpetuhov.android.yellowstone.QuakeFetcher;
 import com.gpetuhov.android.yellowstone.QuakeListFragment;
 import com.gpetuhov.android.yellowstone.QuakePollService;
 import com.gpetuhov.android.yellowstone.sync.YellowstoneSyncAdapter;
@@ -17,4 +18,5 @@ public interface AppComponent {
     void inject(YellowstoneSyncAdapter syncAdapter);
     void inject(QuakePollService pollService);
     void inject(QuakeListFragment quakeListFragment);
+    void inject(QuakeFetcher quakeFetcher);
 }

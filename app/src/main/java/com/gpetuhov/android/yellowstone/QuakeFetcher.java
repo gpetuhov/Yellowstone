@@ -4,7 +4,6 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.Uri;
 
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
@@ -12,41 +11,96 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.http.GET;
+import retrofit2.http.Query;
 
 
 // Fetches JSON string with list of earthquakes from requested URL
 public class QuakeFetcher {
 
-    // Tag for log messages
-    private static final String LOG_TAG = QuakeFetcher.class.getName();
+    // Keeps instance of Retrofit. Injected by Dagger.
+    @Inject Retrofit mRetrofit;
 
-    // USGS URL for queries
-    public static final String USGS_QUERY_URL = "http://earthquake.usgs.gov/fdsnws/event/1/query";
-
-    // Build default request URL to USGS server
-    public String buildRequestUrl() {
-
+    // USGS API interface to be used in Retrofit
+    private interface QuakeFetchService {
         // For USGS query parameters see http://earthquake.usgs.gov/fdsnws/event/1/
+        // If magnitude and number of days are not specified,
+        // the server returns all magnitudes for the last 30 days.
 
-        // Default query: last 30 days, all magnitudes
-        final String defaultUrl = Uri.parse(USGS_QUERY_URL)
-                .buildUpon()
-                .appendQueryParameter("format", "geojson")  // Response format = GeoJSON
-                .appendQueryParameter("latitude", QuakeUtils.CALDERA_LATITUDE)     // Latitude of caldera
-                .appendQueryParameter("longitude", QuakeUtils.CALDERA_LONGITUDE)   // Longitude of caldera
-                .appendQueryParameter("maxradiuskm", QuakeUtils.CALDERA_RADIUS)    // Radius of caldera
-                .build().toString();
+        @GET("query")   // USGS URL for queries is http://earthquake.usgs.gov/fdsnws/event/1/query
+        Call<ResponseBody> getQuakes(
+                @Query("format") String format,             // Response format
+                @Query("latitude") String latitude,         // Area latitude
+                @Query("longitude") String longitude,       // Area longitude
+                @Query("maxradiuskm") String maxradiuskm);  // Area radius in kilometers
+    }
 
-        return defaultUrl;
+    public QuakeFetcher() {
+        // Inject Retrofit instance
+        YellowstoneApp.getAppComponent().inject(this);
+    }
+
+    // Fetch list of earthquakes from USGS server
+    // and return ID of the most recent quake
+    public void fetchQuakes(Context context, SharedPreferences sharedPreferences) {
+
+        // Get JSON response from USGS server
+        String jsonResponse = getJsonString();
+
+        // Parse JSON response and save list of earthquakes
+        parseJsonString(context, sharedPreferences, jsonResponse);
+    }
+
+    // Return JSON response from USGS server
+    private String getJsonString() {
+
+        // String for the JSON response
+        String jsonResponse = "";
+
+        try {
+            // Create instance of the USGS API interface implementation
+            QuakeFetchService service = mRetrofit.create(QuakeFetchService.class);
+
+            // Create call to USGS server
+            Call<ResponseBody> call = service.getQuakes(
+                    "geojson",                      // Response format = GeoJSON
+                    QuakeUtils.CALDERA_LATITUDE,    // Latitude of caldera
+                    QuakeUtils.CALDERA_LONGITUDE,   // Longitude of caldera
+                    QuakeUtils.CALDERA_RADIUS       // Radius of caldera
+            );
+
+            // Execute call synchronously (all QuakeFetcher must be run in background thread).
+            // If no converter is specified, Retrofit returns OkHttp ResponseBody.
+            Response<ResponseBody> response = call.execute();
+
+            // Check if the call returned something
+            if (response != null) {
+                // Get OkHttp ResponseBody from Retrofit Response and convert it to String
+                jsonResponse = response.body().string();
+            }
+        } catch (IOException e) {
+            // If the call failed, return empty string
+            jsonResponse = "";
+        }
+
+        return jsonResponse;
     }
 
     // Parse JSON response from USGS server,
     // save fetched data into quake table
     // and set new quakes fetched flag in SharedPreferences
     // (this is needed for new earthquakes notifications).
-    public void parseJsonString(Context context, SharedPreferences sharedPreferences, String jsonString) {
+    private void parseJsonString(Context context, SharedPreferences sharedPreferences, String jsonString) {
 
         // Empty ArrayList for ContentValues of the earthquakes
         List<ContentValues> quakesContentValues = new ArrayList<>();
@@ -107,7 +161,8 @@ public class QuakeFetcher {
             }
 
         } catch (JSONException e) {
-            // Catch JSON parsing errors
+            // We don't have to catch JSONExceptions specifically,
+            // because later we check if quakes content values list is not empty.
         }
 
         // If quakes content values list is not empty
@@ -161,20 +216,4 @@ public class QuakeFetcher {
             }
         }
     }
-
-
-    // Fetch list of earthquakes from USGS server
-    // and return ID of the most recent quake
-    public void fetchQuakes(Context context, SharedPreferences sharedPreferences) {
-
-        // Build request URL (query to USGS server)
-        String requestURL = buildRequestUrl();
-
-        // Get JSON response from USGS server
-        String jsonResponse = QuakeUtils.getJsonString(requestURL, LOG_TAG);
-
-        // Parse JSON response and save list of earthquakes
-        parseJsonString(context, sharedPreferences, jsonResponse);
-    }
-
 }
