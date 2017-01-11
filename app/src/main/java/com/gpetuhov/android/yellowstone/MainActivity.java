@@ -10,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.gpetuhov.android.yellowstone.sync.YellowstoneSyncAdapter;
+import com.gpetuhov.android.yellowstone.utils.UtilsPrefs;
 
 import javax.inject.Inject;
 
@@ -17,26 +18,25 @@ import javax.inject.Inject;
 // Main activity with Tabs and ViewPager
 public class MainActivity extends VisibleActivity {
 
-    // Keeps instance of SharedPreferences. Injected by Dagger.
-    @Inject SharedPreferences mSharedPreferences;
-
     // Last ViewPager position key in SharedPreferences
     public static final String PREF_LAST_PAGE = "lastViewPagerPosition";
 
     // Default ViewPager position
     public static final int DEFAULT_PAGE = 0;
 
+    // Keeps instance of SharedPreferences. Injected by Dagger.
+    @Inject SharedPreferences mSharedPreferences;
+
+    // Keeps instance of UtilsPrefs. Injected by Dagger.
+    @Inject UtilsPrefs mUtilsPrefs;
+
     // ViewPager for displaying main pages of the app
     private ViewPager mViewPager;
 
-
     // Return new intent to start this activity
     public static Intent newIntent(Context context) {
-
         // Create explicit intent to start this activity
-        Intent intent = new Intent(context, MainActivity.class);
-
-        return intent;
+        return new Intent(context, MainActivity.class);
     }
 
     @Override
@@ -83,10 +83,12 @@ public class MainActivity extends VisibleActivity {
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
 
         // Connect TabLayout with ViewPager
-        tabLayout.setupWithViewPager(mViewPager);
+        if (tabLayout != null) {
+            tabLayout.setupWithViewPager(mViewPager);
+        }
 
         // If previously no quakes were fetched
-        if (QuakeUtils.isPreviouslyFetchedQuakeNotExist(mSharedPreferences)) {
+        if (mUtilsPrefs.isPreviouslyFetchedQuakeNotExist()) {
             // Start fetching data from the network
             YellowstoneSyncAdapter.syncImmediately(this);
         }

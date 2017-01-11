@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
 
 import com.gpetuhov.android.yellowstone.Quake;
-import com.gpetuhov.android.yellowstone.QuakeUtils;
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
 
@@ -36,7 +35,7 @@ public class TestDb extends AndroidTestCase {
         Quake testQuake = new Quake(ids, magnitude, location, time, url, latitude, longitude, depth);
 
         // Create ContentValues of test quake
-        ContentValues testValues = QuakeUtils.getQuakeContentValues(testQuake);
+        ContentValues testValues = testQuake.getQuakeContentValues();
 
         // Insert ContentValues into database and get a row ID back
         long quakeRowId;
@@ -62,7 +61,7 @@ public class TestDb extends AndroidTestCase {
         assertTrue( "Error: No Records returned from quake query", cursor.moveToFirst() );
 
         // Get quake from the cursor
-        Quake quakeFromDb = QuakeUtils.getQuakeFromCursor(cursor);
+        Quake quakeFromDb = Quake.getQuakeFromCursor(cursor);
 
         // Check if testQuake and quake from database are equal
         assertTrue("Error: Quake query validation failed", testQuake.equals(quakeFromDb));

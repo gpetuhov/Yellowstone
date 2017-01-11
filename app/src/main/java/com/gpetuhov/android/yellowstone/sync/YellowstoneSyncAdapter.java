@@ -6,7 +6,6 @@ import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.SyncResult;
 import android.os.Bundle;
 
@@ -20,8 +19,8 @@ import javax.inject.Inject;
 // SyncAdapter handles the transfer of data between a server and the app
 public class YellowstoneSyncAdapter extends AbstractThreadedSyncAdapter {
 
-    // Keeps instance of SharedPreferences. Injected by Dagger.
-    @Inject SharedPreferences mSharedPreferences;
+    // Keeps instance of QuakeFetcher. Injected by Dagger.
+    @Inject QuakeFetcher mQuakeFetcher;
 
     public YellowstoneSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
@@ -33,10 +32,8 @@ public class YellowstoneSyncAdapter extends AbstractThreadedSyncAdapter {
     // Performs data transfer. The entire sync adapter runs in a background thread.
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-        // Create new QuakeFetcher object and fetch data
-        new QuakeFetcher().fetchQuakes(getContext(), mSharedPreferences);
+        mQuakeFetcher.fetchQuakes();
     }
-
 
     // Immediately sync the sync adapter
     public static void syncImmediately(Context context) {
@@ -50,7 +47,6 @@ public class YellowstoneSyncAdapter extends AbstractThreadedSyncAdapter {
         ContentResolver.requestSync(getSyncAccount(context),
                 context.getString(R.string.content_authority), bundle);
     }
-
 
     // Get the fake account to be used with SyncAdapter, or make a new one
     // if the fake account doesn't exist yet.

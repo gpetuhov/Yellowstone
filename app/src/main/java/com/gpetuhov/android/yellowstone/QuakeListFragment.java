@@ -18,6 +18,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
+import com.gpetuhov.android.yellowstone.utils.UtilsNet;
+import com.gpetuhov.android.yellowstone.utils.UtilsPrefs;
 
 import javax.inject.Inject;
 
@@ -34,8 +36,8 @@ public class QuakeListFragment extends Fragment {
     // Quake database loader ID
     public static final int QUAKE_DB_LOADER_ID = 1;
 
-    // Keeps instance of SharedPreferences. Injected by Dagger.
-    @Inject SharedPreferences mSharedPreferences;
+    // Keeps instance of UtilsPrefs. Injected by Dagger.
+    @Inject UtilsPrefs mUtilsPrefs;
 
     // RecyclerView for the list of earthquakes
     @BindView(R.id.quake_recycler_view) RecyclerView mQuakeRecyclerView;
@@ -127,9 +129,9 @@ public class QuakeListFragment extends Fragment {
         mQuakeRecyclerView.setAdapter(mQuakeAdapter);
 
         // If there are no previously fetched quakes
-        if (QuakeUtils.isPreviouslyFetchedQuakeNotExist(mSharedPreferences)) {
+        if (mUtilsPrefs.isPreviouslyFetchedQuakeNotExist()) {
             // If there is no network connection
-            if (QuakeUtils.isNetworkNotAvailableAndConnected(getActivity())) {
+            if (UtilsNet.isNetworkNotAvailableAndConnected(getActivity())) {
                 // Display error
 
                 // Hide RecyclerView
@@ -244,7 +246,7 @@ public class QuakeListFragment extends Fragment {
             mCursor.moveToPosition(position);
 
             // Get earthquake at "position" from the cursor
-            Quake quake = QuakeUtils.getQuakeFromCursor(mCursor);
+            Quake quake = Quake.getQuakeFromCursor(mCursor);
 
             // Set ViewHolder of list item according to earthquake at "position"
             holder.bindQuake(quake);

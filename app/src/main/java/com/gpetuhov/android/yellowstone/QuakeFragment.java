@@ -11,6 +11,10 @@ import android.widget.TextView;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.gpetuhov.android.yellowstone.utils.UtilsMap;
+import com.gpetuhov.android.yellowstone.utils.UtilsQuakeList;
+
+import javax.inject.Inject;
 
 
 // Fragment displays details of earthquake
@@ -18,6 +22,12 @@ public class QuakeFragment extends Fragment {
 
     // Key for fragment's argument with ID of the earthquake to display
     public static final String ARG_QUAKE_ID = "quake_id";
+
+    // Keeps instance of UtilsQuakeList. Injected by Dagger.
+    @Inject UtilsQuakeList mUtilsQuakeList;
+
+    // Keeps instance of UtilsQuakeList. Injected by Dagger.
+    @Inject UtilsMap mUtilsMap;
 
     // Stores details of earthquake to display
     private Quake mQuake;
@@ -68,12 +78,15 @@ public class QuakeFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Inject UtilsQuakeList into this fragment
+        YellowstoneApp.getAppComponent().inject(this);
+
         // Get earthquake ID from the fragment's arguments
         long quakeDbId = getArguments().getLong(ARG_QUAKE_ID);
 
         // Get earthquake with received ID from quake table
         // and store it mQuake field
-        mQuake = QuakeUtils.getQuake(getActivity(), quakeDbId);
+        mQuake = mUtilsQuakeList.getQuake(quakeDbId);
     }
 
     @Override
@@ -139,7 +152,7 @@ public class QuakeFragment extends Fragment {
                 mGoogleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
                     @Override
                     public void onMapLoaded() {
-                        QuakeUtils.updateMap(getActivity(), mGoogleMap, mQuake);
+                        mUtilsMap.updateMap(mGoogleMap, mQuake);
                     }
                 });
             }

@@ -7,20 +7,18 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.preference.PreferenceManager;
+
+import com.gpetuhov.android.yellowstone.utils.UtilsPrefs;
 
 import javax.inject.Inject;
 
 
 // Service checks for new earthquakes and sends notifications to user
 public class QuakePollService extends IntentService {
-
-    // Keeps instance of SharedPreferences. Injected by Dagger.
-    @Inject SharedPreferences mSharedPreferences;
 
     // Action constant for outgoing intent to show notification
     public static final String ACTION_SHOW_NOTIFICATION =
@@ -31,14 +29,8 @@ public class QuakePollService extends IntentService {
     public static final String PERM_PRIVATE =
             "com.gpetuhov.android.yellowstone.PRIVATE";
 
-    // Polling interval 60 seconds (for testing)
-    public static final long POLL_INTERVAL_60SEC = 1000 * 60;
-
     // Polling interval 1 hour (for release)
     public static final long POLL_INTERVAL_HOUR = AlarmManager.INTERVAL_HOUR;
-
-    // Polling interval in milliseconds
-    public static final long POLL_INTERVAL = POLL_INTERVAL_60SEC;
 
     // Key for notification request code in outgoing intent
     public static final String REQUEST_CODE = "REQUEST_CODE";
@@ -51,6 +43,12 @@ public class QuakePollService extends IntentService {
 
     // Tag for logging
     private static final String LOG_TAG = QuakePollService.class.getName();
+
+    // Keeps instance of QuakeFetcher. Injected by Dagger.
+    @Inject QuakeFetcher mQuakeFetcher;
+
+    // Keeps instance of UtilPrefs. Injected by Dagger.
+    @Inject UtilsPrefs mUtilsPrefs;
 
     // Create new intent to start this service
     public static Intent newIntent(Context context) {
@@ -111,7 +109,7 @@ public class QuakePollService extends IntentService {
     public void onCreate() {
         super.onCreate();
 
-        // Inject SharedPreference instance into this service field
+        // Inject QuakeFetcher instance into this service field
         YellowstoneApp.getAppComponent().inject(this);
     }
 
@@ -120,12 +118,10 @@ public class QuakePollService extends IntentService {
     protected void onHandleIntent(Intent intent) {
 
         // Fetch new list of quakes from the network.
-        // Method needs context to work, so we pass this service into it,
-        // because Service is a Context.
-        new QuakeFetcher().fetchQuakes(this, mSharedPreferences);
+        mQuakeFetcher.fetchQuakes();
 
         // If new quakes fetched flag in SharedPreferences is "true"
-        if (QuakeUtils.getNewQuakesFetchedFlag(mSharedPreferences)) {
+        if (mUtilsPrefs.getNewQuakesFetchedFlag()) {
             // Got a new result
 
             // Get reference to resources
@@ -149,9 +145,6 @@ public class QuakePollService extends IntentService {
 
             // Send ordered broadcast with this notification
             showBackgroundNotification(QUAKE_NOTIFICATION_ID, notification);
-
-        } else {
-            // Otherwise got and old result, do nothing
         }
     }
 

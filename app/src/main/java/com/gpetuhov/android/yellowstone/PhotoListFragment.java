@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.gpetuhov.android.yellowstone.utils.UtilsNet;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class PhotoListFragment extends Fragment
         super.onActivityCreated(savedInstanceState);
 
         // If there is a network connection, fetch data
-        if (QuakeUtils.isNetworkAvailableAndConnected(getActivity())) {
+        if (UtilsNet.isNetworkAvailableAndConnected(getActivity())) {
 
             // Get reference to the LoaderManager
             LoaderManager loaderManager = getActivity().getSupportLoaderManager();
@@ -87,7 +88,7 @@ public class PhotoListFragment extends Fragment
         mPhotoEmptyView = (TextView) v.findViewById(R.id.photo_list_empty_view);
 
         // If there is a network connection, display RecyclerView with photos
-        if (QuakeUtils.isNetworkAvailableAndConnected(getActivity())) {
+        if (UtilsNet.isNetworkAvailableAndConnected(getActivity())) {
             // Display RecyclerView
             mPhotoRecyclerView.setVisibility(View.VISIBLE);
 

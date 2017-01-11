@@ -9,7 +9,11 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 
+import com.gpetuhov.android.yellowstone.utils.UtilsQuakeList;
+
 import java.util.List;
+
+import javax.inject.Inject;
 
 
 // Activity for details of the earthquake.
@@ -18,6 +22,9 @@ public class QuakePagerActivity extends VisibleActivity {
 
     // Key for extra data in intent
     private static final String EXTRA_QUAKE_ID = "quake_id_extra_data";
+
+    // Keeps instance of UtilsQuakeList. Injected by Dagger.
+    @Inject UtilsQuakeList mUtilsQuakeList;
 
     // Stores view pager to swipe between earthquakes
     private ViewPager mViewPager;
@@ -41,6 +48,9 @@ public class QuakePagerActivity extends VisibleActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Inject UtilsQuakeList into this activity
+        YellowstoneApp.getAppComponent().inject(this);
+
         // Set layout for the activity
         setContentView(R.layout.activtiy_quake_pager);
 
@@ -48,7 +58,7 @@ public class QuakePagerActivity extends VisibleActivity {
         mViewPager = (ViewPager) findViewById(R.id.activity_quake_pager_viewpager);
 
         // Get list of quakes
-        mQuakes = QuakeUtils.getQuakes(this);
+        mQuakes = mUtilsQuakeList.getQuakes();
 
         // Get fragment manager
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -77,16 +87,15 @@ public class QuakePagerActivity extends VisibleActivity {
         });
 
         // Get earthquake ID from extra data of the received intent, that started this activity
-        String quakeId = getIntent().getStringExtra(EXTRA_QUAKE_ID);
+        long quakeDbId = getIntent().getLongExtra(EXTRA_QUAKE_ID, 0);
 
         // Look through the list of quakes and find the quake with ID matching the ID from the intent.
         // Set position of this quake as the position of current item for the ViewPager.
         for (int i = 0; i < mQuakes.size(); i++) {
-            if (mQuakes.get(i).getId().equals(quakeId)) {
+            if (mQuakes.get(i).getDbId() == quakeDbId) {
                 mViewPager.setCurrentItem(i);
                 break;
             }
         }
     }
-
 }

@@ -1,5 +1,10 @@
 package com.gpetuhov.android.yellowstone;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+
+import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
+
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -33,6 +38,28 @@ public class Quake {
 
     // Website URL of the earthquake
     private String mUrl;
+
+    // Return Quake object with data extracted from a cursor row
+    public static Quake getQuakeFromCursor(Cursor cursor) {
+
+        // Extract columns from a cursor row and save them to corresponding variables
+        String ids = cursor.getString(cursor.getColumnIndex(QuakeEntry.COLUMN_IDS));
+        double magnitude = cursor.getDouble(cursor.getColumnIndex(QuakeEntry.COLUMN_MAGNITUDE));
+        String location = cursor.getString(cursor.getColumnIndex(QuakeEntry.COLUMN_LOCATION));
+        double latitude = cursor.getDouble(cursor.getColumnIndex(QuakeEntry.COLUMN_LATITUDE));
+        double longitude = cursor.getDouble(cursor.getColumnIndex(QuakeEntry.COLUMN_LONGITUDE));
+        double depth = cursor.getDouble(cursor.getColumnIndex(QuakeEntry.COLUMN_DEPTH));
+        long time = cursor.getLong(cursor.getColumnIndex(QuakeEntry.COLUMN_TIME));
+        String url = cursor.getString(cursor.getColumnIndex(QuakeEntry.COLUMN_URL));
+
+        // Create new Quake object with data extracted from a cursor row
+        Quake quake = new Quake(ids, magnitude, location, time, url, latitude, longitude, depth);
+
+        // Set ID of the earthquake in the database table
+        quake.setDbId(cursor.getLong(cursor.getColumnIndex(QuakeEntry._ID)));
+
+        return quake;
+    }
 
     public Quake(String id, double magnitude, String location, long timeInMilliseconds,
                  String url, double latitude, double longitude, double depth) {
@@ -133,6 +160,25 @@ public class Quake {
     public String getFormattedLongitude() {
         DecimalFormat longitudeFormat = new DecimalFormat("0.000");
         return longitudeFormat.format(mLongitude);
+    }
+
+    // Return content values to write Quake object into database
+    public ContentValues getQuakeContentValues() {
+
+        // Create new content values
+        ContentValues values = new ContentValues();
+
+        // Put data from Quake object fields into content values
+        values.put(QuakeEntry.COLUMN_IDS, getId());
+        values.put(QuakeEntry.COLUMN_MAGNITUDE, getMagnitude());
+        values.put(QuakeEntry.COLUMN_LOCATION, getLocation());
+        values.put(QuakeEntry.COLUMN_LATITUDE, getLatitude());
+        values.put(QuakeEntry.COLUMN_LONGITUDE, getLongitude());
+        values.put(QuakeEntry.COLUMN_DEPTH, getDepth());
+        values.put(QuakeEntry.COLUMN_TIME, getTimeInMilliseconds());
+        values.put(QuakeEntry.COLUMN_URL, getUrl());
+
+        return values;
     }
 
     // Check if value of fields of this Quake object equal to values of fields of passed Quake object

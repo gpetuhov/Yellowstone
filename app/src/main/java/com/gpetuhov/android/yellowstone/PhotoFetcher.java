@@ -7,26 +7,48 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 // Fetches list of photos from Flickr
 public class PhotoFetcher {
 
-    // Tag for log messages
-    private static final String LOG_TAG = PhotoFetcher.class.getName();
-
     // Flickr URL for queries
-    public static final String FLICKR_QUERY_URL = "https://api.flickr.com/services/rest/";
+    private static final String FLICKR_QUERY_URL = "https://api.flickr.com/services/rest/";
+
+    // OkHttpClient to access network
+    private OkHttpClient mOkHttpClient;
+
+    public PhotoFetcher(OkHttpClient okHttpClient) {
+        mOkHttpClient = okHttpClient;
+    }
+
+    // Fetch list of photos from Flickr
+    public List<PhotoListItem> fetchPhotos() {
+
+        // Build request URL (query to Flickr)
+        String requestURL = buildRequestUrl();
+
+        // Get JSON response from Flickr
+        String jsonResponse = getJsonString(requestURL);
+
+        // Parse JSON response and return list of photos
+        return parseJsonString(jsonResponse);
+    }
 
     // Build request URL to Flickr with specified parameters
-    public String buildRequestUrl() {
+    private String buildRequestUrl() {
 
         // For Flickr query parameters see https://www.flickr.com/services/api/
 
         // Default query: Search text = yellowstone, sorted by date uploaded, returns 100 photos
         // (this is default sort order and number of photos returned, if not specified)
-        final String defaultUrl = Uri.parse(FLICKR_QUERY_URL)
+        return Uri.parse(FLICKR_QUERY_URL)
                 .buildUpon()
                 // Method = search, because we search photos with "yellowstone" keyword
                 .appendQueryParameter("method", "flickr.photos.search")
@@ -37,12 +59,37 @@ public class PhotoFetcher {
                 .appendQueryParameter("nojsoncallback", "1")    // Simplified JSON response
                 .appendQueryParameter("extras", "url_s")        // Include image URL
                 .build().toString();
+    }
 
-        return defaultUrl;
+    // Get JSON response from the requested URL
+    private String getJsonString(String requestedUrl) {
+
+        // Build new request from requested URL
+        Request request = new Request.Builder()
+                .url(requestedUrl)
+                .build();
+
+        String jsonResponse;  // String contains JSON response
+
+        Response response;   // OkHttp response
+
+        try {
+            // Get response from server
+            response = mOkHttpClient.newCall(request).execute();
+            // Convert response to string
+            jsonResponse = response.body().string();
+        } catch (IOException e) {
+            // In case of error, return empty string
+            jsonResponse = "";
+        }
+
+        // Shutdown for OkHttp isn't necessary
+
+        return jsonResponse;
     }
 
     // Parse JSON response from Flickr
-    public List<PhotoListItem> parseJsonString(String jsonString) {
+    private List<PhotoListItem> parseJsonString(String jsonString) {
 
         // Empty ArrayList for the list of photos
         List<PhotoListItem> items = new ArrayList<>();
@@ -88,6 +135,7 @@ public class PhotoFetcher {
             }
 
         } catch (JSONException e) {
+            // In case of JSONException, do nothing. Empty list will be returned.
         }
 
         // Return the list of photos
@@ -95,17 +143,6 @@ public class PhotoFetcher {
     }
 
 
-    // Fetch list of photos from Flickr
-    public List<PhotoListItem> fetchPhotos() {
 
-        // Build request URL (query to Flickr)
-        String requestURL = buildRequestUrl();
-
-        // Get JSON response from Flickr
-        String jsonResponse = QuakeUtils.getJsonString(requestURL, LOG_TAG);
-
-        // Parse JSON response and return list of photos
-        return parseJsonString(jsonResponse);
-    }
 
 }

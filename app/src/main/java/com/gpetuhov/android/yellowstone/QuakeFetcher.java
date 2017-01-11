@@ -2,10 +2,10 @@ package com.gpetuhov.android.yellowstone;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
-import android.content.SharedPreferences;
 
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
+import com.gpetuhov.android.yellowstone.utils.UtilsMap;
+import com.gpetuhov.android.yellowstone.utils.UtilsPrefs;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,8 +14,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.inject.Inject;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -28,8 +26,17 @@ import retrofit2.http.Query;
 // Fetches JSON string with list of earthquakes from requested URL
 public class QuakeFetcher {
 
-    // Keeps instance of Retrofit. Injected by Dagger.
-    @Inject Retrofit mRetrofit;
+    // Keeps instance of Retrofit
+    private Retrofit mRetrofit;
+
+    // Keeps instance of content resolver
+    private ContentResolver mContentResolver;
+
+    // Keeps instance of UtilsPrefs
+    private UtilsPrefs mUtilsPrefs;
+
+    // JSON response from USGS server
+    private String mJsonResponse;
 
     // USGS API interface to be used in Retrofit
     private interface QuakeFetchService {
@@ -45,24 +52,20 @@ public class QuakeFetcher {
                 @Query("maxradiuskm") String maxradiuskm);  // Area radius in kilometers
     }
 
-    public QuakeFetcher() {
-        // Inject Retrofit instance
-        YellowstoneApp.getAppComponent().inject(this);
+    public QuakeFetcher(Retrofit retrofit, ContentResolver contentResolver, UtilsPrefs utilsPrefs) {
+        mRetrofit = retrofit;
+        mContentResolver = contentResolver;
+        mUtilsPrefs = utilsPrefs;
     }
 
     // Fetch list of earthquakes from USGS server
-    // and return ID of the most recent quake
-    public void fetchQuakes(Context context, SharedPreferences sharedPreferences) {
-
-        // Get JSON response from USGS server
-        String jsonResponse = getJsonString();
-
-        // Parse JSON response and save list of earthquakes
-        parseJsonString(context, sharedPreferences, jsonResponse);
+    public void fetchQuakes() {
+        mJsonResponse = getJsonResponse();
+        parseJsonResponse();
     }
 
     // Return JSON response from USGS server
-    private String getJsonString() {
+    private String getJsonResponse() {
 
         // String for the JSON response
         String jsonResponse = "";
@@ -74,9 +77,9 @@ public class QuakeFetcher {
             // Create call to USGS server
             Call<ResponseBody> call = service.getQuakes(
                     "geojson",                      // Response format = GeoJSON
-                    QuakeUtils.CALDERA_LATITUDE,    // Latitude of caldera
-                    QuakeUtils.CALDERA_LONGITUDE,   // Longitude of caldera
-                    QuakeUtils.CALDERA_RADIUS       // Radius of caldera
+                    UtilsMap.CALDERA_LATITUDE,    // Latitude of caldera
+                    UtilsMap.CALDERA_LONGITUDE,   // Longitude of caldera
+                    UtilsMap.CALDERA_RADIUS       // Radius of caldera
             );
 
             // Execute call synchronously (all QuakeFetcher must be run in background thread).
@@ -100,15 +103,14 @@ public class QuakeFetcher {
     // save fetched data into quake table
     // and set new quakes fetched flag in SharedPreferences
     // (this is needed for new earthquakes notifications).
-    private void parseJsonString(Context context, SharedPreferences sharedPreferences, String jsonString) {
+    private void parseJsonResponse() {
 
         // Empty ArrayList for ContentValues of the earthquakes
         List<ContentValues> quakesContentValues = new ArrayList<>();
 
         try {
-
             // Create JSONObject from JSON string
-            JSONObject jsonBody = new JSONObject(jsonString);
+            JSONObject jsonBody = new JSONObject(mJsonResponse);
 
             // Extract JSONArray associated with the key called "features" (feature = earthquake)
             JSONArray quakeJsonArray = jsonBody.getJSONArray("features");
@@ -157,7 +159,7 @@ public class QuakeFetcher {
                 Quake quake = new Quake(id, magnitude, location, time, url, latitude, longitude, depth);
 
                 // Add ContentValues for the new Quake object into the list
-                quakesContentValues.add(QuakeUtils.getQuakeContentValues(quake));
+                quakesContentValues.add(quake.getQuakeContentValues());
             }
 
         } catch (JSONException e) {
@@ -178,7 +180,7 @@ public class QuakeFetcher {
             if (resultId != null) {
 
                 // Get ID of the most recent earthquake from SharedPreferences
-                String lastResultID = QuakeUtils.getLastResultId(sharedPreferences);
+                String lastResultID = mUtilsPrefs.getLastResultId();
 
                 // If ID of the most recent earthquake in just fetched list
                 // is not equal to the ID of the most recent earthquake in last time fetched list
@@ -186,14 +188,11 @@ public class QuakeFetcher {
                     // New quakes fetched
 
                     // Set new quakes fetched flag in SharedPreferences to "true"
-                    QuakeUtils.setNewQuakesFetchedFlag(sharedPreferences, true);
-
-                    // Get content resolver for the application context
-                    ContentResolver contentResolver = context.getContentResolver();
+                    mUtilsPrefs.setNewQuakesFetchedFlag(true);
 
                     // Delete all rows from quake table (remove previously fetched data).
                     // Method returns number of rows deleted, but we don't use it.
-                    contentResolver.delete(QuakeEntry.CONTENT_URI, null, null);
+                    mContentResolver.delete(QuakeEntry.CONTENT_URI, null, null);
 
                     // Create new array of ContentValues of the proper size
                     ContentValues[] quakesContentValuesArray = new ContentValues[quakesContentValues.size()];
@@ -202,17 +201,17 @@ public class QuakeFetcher {
                     quakesContentValues.toArray(quakesContentValuesArray);
 
                     // Bulk insert this array into quake table
-                    contentResolver.bulkInsert(QuakeEntry.CONTENT_URI, quakesContentValuesArray);
+                    mContentResolver.bulkInsert(QuakeEntry.CONTENT_URI, quakesContentValuesArray);
 
                 } else {
                     // No new quakes fetched
 
                     // Set new quakes fetched flag in SharedPreferences to "false"
-                    QuakeUtils.setNewQuakesFetchedFlag(sharedPreferences, false);
+                    mUtilsPrefs.setNewQuakesFetchedFlag(false);
                 }
 
                 // Update ID of the most recent quake in SharedPreferences (replace with new value)
-                QuakeUtils.setLastResultId(sharedPreferences, resultId);
+                mUtilsPrefs.setLastResultId(resultId);
             }
         }
     }
