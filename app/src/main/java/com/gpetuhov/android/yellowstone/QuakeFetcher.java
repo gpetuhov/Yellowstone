@@ -38,6 +38,9 @@ public class QuakeFetcher {
     // JSON response from USGS server
     private String mJsonResponse;
 
+    // List of quakes content values
+    private List<ContentValues> mQuakeListContentValues;
+
     // USGS API interface to be used in Retrofit
     private interface QuakeFetchService {
         // For USGS query parameters see http://earthquake.usgs.gov/fdsnws/event/1/
@@ -62,11 +65,11 @@ public class QuakeFetcher {
     public void fetchQuakes() {
         mJsonResponse = getJsonResponse();
         parseJsonResponse();
+        saveData();
     }
 
     // Return JSON response from USGS server
     private String getJsonResponse() {
-
         // String for the JSON response
         String jsonResponse = "";
 
@@ -100,13 +103,10 @@ public class QuakeFetcher {
     }
 
     // Parse JSON response from USGS server,
-    // save fetched data into quake table
-    // and set new quakes fetched flag in SharedPreferences
-    // (this is needed for new earthquakes notifications).
+    // save fetched data into list
     private void parseJsonResponse() {
-
-        // Empty ArrayList for ContentValues of the earthquakes
-        List<ContentValues> quakesContentValues = new ArrayList<>();
+        // Create new empty ArrayList for ContentValues of the earthquakes
+        mQuakeListContentValues = new ArrayList<>();
 
         try {
             // Create JSONObject from JSON string
@@ -159,19 +159,23 @@ public class QuakeFetcher {
                 Quake quake = new Quake(id, magnitude, location, time, url, latitude, longitude, depth);
 
                 // Add ContentValues for the new Quake object into the list
-                quakesContentValues.add(quake.getQuakeContentValues());
+                mQuakeListContentValues.add(quake.getQuakeContentValues());
             }
 
         } catch (JSONException e) {
             // We don't have to catch JSONExceptions specifically,
             // because later we check if quakes content values list is not empty.
         }
+    }
 
+    // Save fetched data and
+    // and set new quakes fetched flag in SharedPreferences
+    // (this is needed for new earthquakes notifications).
+    private void saveData() {
         // If quakes content values list is not empty
-        if (quakesContentValues.size() > 0) {
-
+        if (mQuakeListContentValues.size() > 0) {
             // Get content values of the most recent quake
-            ContentValues mostRecentQuakeCV = quakesContentValues.get(0);
+            ContentValues mostRecentQuakeCV = mQuakeListContentValues.get(0);
 
             // Get ID of the most recent quake
             String resultId = mostRecentQuakeCV.getAsString(QuakeEntry.COLUMN_IDS);
@@ -190,22 +194,10 @@ public class QuakeFetcher {
                     // Set new quakes fetched flag in SharedPreferences to "true"
                     mUtilsPrefs.setNewQuakesFetchedFlag(true);
 
-                    // Delete all rows from quake table (remove previously fetched data).
-                    // Method returns number of rows deleted, but we don't use it.
-                    mContentResolver.delete(QuakeEntry.CONTENT_URI, null, null);
-
-                    // Create new array of ContentValues of the proper size
-                    ContentValues[] quakesContentValuesArray = new ContentValues[quakesContentValues.size()];
-
-                    // Convert list of quake content values to array of quake content values
-                    quakesContentValues.toArray(quakesContentValuesArray);
-
-                    // Bulk insert this array into quake table
-                    mContentResolver.bulkInsert(QuakeEntry.CONTENT_URI, quakesContentValuesArray);
-
+                    // Save fetched data
+                    updateQuakeStorage();
                 } else {
                     // No new quakes fetched
-
                     // Set new quakes fetched flag in SharedPreferences to "false"
                     mUtilsPrefs.setNewQuakesFetchedFlag(false);
                 }
@@ -214,5 +206,21 @@ public class QuakeFetcher {
                 mUtilsPrefs.setLastResultId(resultId);
             }
         }
+    }
+
+    // Replace old data in quake table with new fetched list
+    private void updateQuakeStorage() {
+        // Delete all rows from quake table (remove previously fetched data).
+        // Method returns number of rows deleted, but we don't use it.
+        mContentResolver.delete(QuakeEntry.CONTENT_URI, null, null);
+
+        // Create new array of ContentValues of the proper size
+        ContentValues[] quakesContentValuesArray = new ContentValues[mQuakeListContentValues.size()];
+
+        // Convert list of quake content values to array of quake content values
+        mQuakeListContentValues.toArray(quakesContentValuesArray);
+
+        // Bulk insert this array into quake table
+        mContentResolver.bulkInsert(QuakeEntry.CONTENT_URI, quakesContentValuesArray);
     }
 }
