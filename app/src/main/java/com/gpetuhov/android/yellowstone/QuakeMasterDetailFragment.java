@@ -77,7 +77,7 @@ public class QuakeMasterDetailFragment extends Fragment
             // If resource id does not exist, then we are on phone and must start new activity
 
             // Create explicit intent to start activity with details of the earthquake
-            Intent intent = QuakePagerActivity.newIntent(getActivity(), quake.getDbId());
+            Intent intent = QuakePagerActivity.newIntent(getActivity(), quake);
 
             // Start activity with details of the earthquake
             startActivity(intent);
@@ -85,8 +85,8 @@ public class QuakeMasterDetailFragment extends Fragment
         } else {
             // If resource id exists, then we are on tablet and must create new child fragment and add it
 
-            // Create new fragment with quake details and pass quake ID as the fragment argument
-            Fragment newDetail = QuakeFragment.newInstance(quake.getDbId());
+            // Create new fragment and pass quake as the fragment argument
+            Fragment newDetail = QuakeFragment.newInstance(quake);
 
             // Get reference to fragment manager and replace fragment in the corresponding container
             // by the new fragment (this is done, because fragment container may already contain

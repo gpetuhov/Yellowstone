@@ -2,7 +2,6 @@ package com.gpetuhov.android.yellowstone;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
@@ -23,9 +22,6 @@ public class MainActivity extends VisibleActivity {
 
     // Default ViewPager position
     public static final int DEFAULT_PAGE = 0;
-
-    // Keeps instance of SharedPreferences. Injected by Dagger.
-    @Inject SharedPreferences mSharedPreferences;
 
     // Keeps instance of UtilsPrefs. Injected by Dagger.
     @Inject UtilsPrefs mUtilsPrefs;
@@ -65,10 +61,7 @@ public class MainActivity extends VisibleActivity {
             @Override
             public void onPageSelected(int position) {
                 // Save current ViewPager position to SharedPreferences
-                mSharedPreferences
-                        .edit()
-                        .putInt(PREF_LAST_PAGE, position)
-                        .apply();
+                mUtilsPrefs.putIntToSharedPreferences(PREF_LAST_PAGE, position);
 
                 // Make activity recreate menu
                 invalidateOptionsMenu();
@@ -104,7 +97,7 @@ public class MainActivity extends VisibleActivity {
 
         // Get last ViewPager position from SharedPreferences.
         // If null, return default page number (starting page).
-        int position = mSharedPreferences.getInt(PREF_LAST_PAGE, DEFAULT_PAGE);
+        int position = mUtilsPrefs.getIntFromSharedPreferences(PREF_LAST_PAGE, DEFAULT_PAGE);
 
         // Update ViewPager position with new value
         mViewPager.setCurrentItem(position);

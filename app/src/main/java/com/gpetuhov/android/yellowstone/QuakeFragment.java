@@ -12,7 +12,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.gpetuhov.android.yellowstone.utils.UtilsMap;
-import com.gpetuhov.android.yellowstone.utils.UtilsQuakeList;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -20,11 +22,8 @@ import javax.inject.Inject;
 // Fragment displays details of earthquake
 public class QuakeFragment extends Fragment {
 
-    // Key for fragment's argument with ID of the earthquake to display
-    public static final String ARG_QUAKE_ID = "quake_id";
-
-    // Keeps instance of UtilsQuakeList. Injected by Dagger.
-    @Inject UtilsQuakeList mUtilsQuakeList;
+    // Key for fragment's argument with quake to display
+    public static final String ARG_KEY_QUAKE = "quake_key";
 
     // Keeps instance of UtilsQuakeList. Injected by Dagger.
     @Inject UtilsMap mUtilsMap;
@@ -57,13 +56,13 @@ public class QuakeFragment extends Fragment {
     private MapView mMapView;
 
     // Return new instance of this fragment and attach arguments to it
-    public static QuakeFragment newInstance(long quakeDbId) {
+    public static QuakeFragment newInstance(Quake quake) {
 
         // Create new empty Bundle object for fragment arguments
         Bundle args = new Bundle();
 
         // Put earthquake ID into Bundle object
-        args.putLong(ARG_QUAKE_ID, quakeDbId);
+        args.putSerializable(ARG_KEY_QUAKE, quake);
 
         // Create new instance of this fragment
         QuakeFragment fragment = new QuakeFragment();
@@ -81,12 +80,8 @@ public class QuakeFragment extends Fragment {
         // Inject UtilsQuakeList into this fragment
         YellowstoneApp.getAppComponent().inject(this);
 
-        // Get earthquake ID from the fragment's arguments
-        long quakeDbId = getArguments().getLong(ARG_QUAKE_ID);
-
-        // Get earthquake with received ID from quake table
-        // and store it mQuake field
-        mQuake = mUtilsQuakeList.getQuake(quakeDbId);
+        // Get quake from the fragment's arguments
+        mQuake = (Quake) getArguments().getSerializable(ARG_KEY_QUAKE);
     }
 
     @Override
@@ -126,7 +121,6 @@ public class QuakeFragment extends Fragment {
         // Display earthquake coordinates
         mQuakeCoordinatesTextView.setText(mQuake.getFormattedLatitude() + ", " + mQuake.getFormattedLongitude());
 
-
         // Get access to MapView for displaying map with the earthquake
         mMapView = (MapView) v.findViewById(R.id.quake_detail_mapview);
 
@@ -152,7 +146,14 @@ public class QuakeFragment extends Fragment {
                 mGoogleMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
                     @Override
                     public void onMapLoaded() {
-                        mUtilsMap.updateMap(mGoogleMap, mQuake);
+                        // Create new empty list of quakes
+                        List<Quake> quakes = new ArrayList<Quake>();
+
+                        // Add quake to display on map into list
+                        quakes.add(mQuake);
+
+                        // Update map with this quake
+                        mUtilsMap.updateMap(mGoogleMap, quakes);
                     }
                 });
             }

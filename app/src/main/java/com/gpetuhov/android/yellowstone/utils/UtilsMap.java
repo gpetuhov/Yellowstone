@@ -11,7 +11,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.gpetuhov.android.yellowstone.Quake;
 import com.gpetuhov.android.yellowstone.R;
 
-import java.util.ArrayList;
 import java.util.List;
 
 // Map utilities
@@ -28,34 +27,22 @@ public class UtilsMap {
 
     private Context mContext;
 
-    private UtilsQuakeList mUtilsQuakeList;
-
-    public UtilsMap(Context context, UtilsQuakeList utilsQuakeList) {
+    public UtilsMap(Context context) {
         mContext = context;
-        mUtilsQuakeList = utilsQuakeList;
     }
 
-    // Updates map with bounds including Caldera and points earthquakes
-    // If quake is passed (not null), displays it on map.
-    // If not (quake == null), displays all earthquakes from quake table.
-    public void updateMap(GoogleMap googleMap, Quake quake) {
+    // Updates map with bounds including Caldera and points earthquakes,
+    // displays list of quakes on map.
+    public void updateMap(GoogleMap googleMap, List<Quake> quakes) {
 
         // Do nothing, if map is not ready
-        if (googleMap == null) {
+        if (null == googleMap) {
             return;
         }
 
-        // Stores list of earthquakes to display on map
-        List<Quake> quakes;
-
-        if (quake == null) {
-            // If quake is not passed, get all quakes from the quakes table
-            quakes = mUtilsQuakeList.getQuakes();
-        } else {
-            // Otherwise create empty list and add passed quake to it
-            // In this case list contains only one quake to display
-            quakes = new ArrayList<>();
-            quakes.add(quake);
+        // Do nothing, if list is null
+        if (null == quakes) {
+            return;
         }
 
         // Coordinates of Caldera

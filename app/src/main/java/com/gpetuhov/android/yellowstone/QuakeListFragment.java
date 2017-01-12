@@ -1,15 +1,12 @@
 package com.gpetuhov.android.yellowstone;
 
 
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -17,7 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
+import com.gpetuhov.android.yellowstone.data.QuakeCursorLoaderFactory;
 import com.gpetuhov.android.yellowstone.utils.UtilsNet;
 import com.gpetuhov.android.yellowstone.utils.UtilsPrefs;
 
@@ -33,11 +30,14 @@ import butterknife.Unbinder;
 // and set itself as a listener for the callbacks.
 public class QuakeListFragment extends Fragment {
 
-    // Quake database loader ID
-    public static final int QUAKE_DB_LOADER_ID = 1;
+    // Quake list loader ID
+    public static final int QUAKE_LIST_LOADER_ID = 1;
 
     // Keeps instance of UtilsPrefs. Injected by Dagger.
     @Inject UtilsPrefs mUtilsPrefs;
+
+    // Keeps instance of QuakeCursorLoaderFactory. Injected by Dagger.
+    @Inject QuakeCursorLoaderFactory mQuakeCursorLoaderFactory;
 
     // RecyclerView for the list of earthquakes
     @BindView(R.id.quake_recycler_view) RecyclerView mQuakeRecyclerView;
@@ -51,8 +51,8 @@ public class QuakeListFragment extends Fragment {
     // Adapter for the RecyclerView
     private QuakeAdapter mQuakeAdapter;
 
-    // Listener to LoaderManager callbacks for quake database loader
-    private QuakeDbLoaderListener mQuakeDbLoaderListener;
+    // Listener to LoaderManager callbacks for quake list loader
+    private QuakeListCursorLoaderListener mQuakeListCursorLoaderListener;
 
     // Stores reference to a host that uses this fragment
     // Host must implement Callbacks interface
@@ -78,8 +78,8 @@ public class QuakeListFragment extends Fragment {
         // Inject SharedPreference instance into this fragment field
         YellowstoneApp.getAppComponent().inject(this);
 
-        // Create new quake database loader listener
-        mQuakeDbLoaderListener = new QuakeDbLoaderListener();
+        // Create new quake list loader listener
+        mQuakeListCursorLoaderListener = new QuakeListCursorLoaderListener();
     }
 
     // Best practice to initialize a loader is in the fragment's onActivityCreated method,
@@ -92,15 +92,15 @@ public class QuakeListFragment extends Fragment {
         // Get reference to the LoaderManager
         LoaderManager loaderManager = getActivity().getSupportLoaderManager();
 
-        // Initialize quake database loader and set a listener for loader callbacks.
+        // Initialize quake list loader and set a listener for loader callbacks.
         // restartLoader always reloads data.
-        loaderManager.restartLoader(QUAKE_DB_LOADER_ID, null, mQuakeDbLoaderListener);
+        loaderManager.restartLoader(QUAKE_LIST_LOADER_ID, null, mQuakeListCursorLoaderListener);
 
         // Fetching data from the network is triggered in host activity's onCreate method.
         // After fetching data from the network is complete, UI gets updated automatically. How?
         // In quake ContentProvider query(...) method we set notification URI
         // in the returning cursor by calling cursor.setNotificationUri(...).
-        // Quake CursorLoader (that loads data from the database) gets this cursor back
+        // Quake CursorLoader (that loads data from the quake table) gets this cursor back
         // and registers an observer in ContentResolver.
         // When QuakeFetcher deletes and writes data into quake table,
         // ContentProvider notifies ContentResolver about changes by calling
@@ -256,7 +256,7 @@ public class QuakeListFragment extends Fragment {
         @Override
         public int getItemCount() {
             // If the cursor is null, then number of items is 0
-            if (mCursor == null) {
+            if (null == mCursor) {
                 return 0;
             }
 
@@ -275,36 +275,14 @@ public class QuakeListFragment extends Fragment {
     }
 
 
-    // Listens to LoaderManager callbacks for quake database loader
-    private class QuakeDbLoaderListener implements LoaderManager.LoaderCallbacks<Cursor> {
+    // Listens to LoaderManager callbacks for quake list loader
+    private class QuakeListCursorLoaderListener implements LoaderManager.LoaderCallbacks<Cursor> {
 
-        // Returns new quake database loader
+        // Returns new quake list loader
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-
-            // Get default SharedPreferences
-            SharedPreferences sharedPrefs =
-                    PreferenceManager.getDefaultSharedPreferences(getActivity());
-
-            // Get magnitude preference value from SharedPreference by the key
-            // (default value is value_1 (minimum magnitude = 0, that is all magnitudes)
-            String minMagnitude = sharedPrefs.getString(
-                    getActivity().getString(R.string.pref_magnitude_key),
-                    getActivity().getString(R.string.pref_magnitude_value_1));
-
-            // Build selection (WHERE clause)
-            String selection = QuakeEntry.COLUMN_MAGNITUDE + " >= ?";    // WHERE mag >=
-
-            // Build selection arguments (arguments of the condition of WHERE clause).
-            String[] selectionArgs = new String[] { minMagnitude };
-
-            // Create and return new cursor loader that loads quakes from quake table in the database
-            return new CursorLoader(getActivity(),
-                    QuakeEntry.CONTENT_URI,
-                    null,
-                    selection,
-                    selectionArgs,
-                    null);
+            // Create and return new cursor loader that loads quakes from quake table
+            return mQuakeCursorLoaderFactory.createQuakeCursorLoader();
         }
 
         // Method is called, when load is finished

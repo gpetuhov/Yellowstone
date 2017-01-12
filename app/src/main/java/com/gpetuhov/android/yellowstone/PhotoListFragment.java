@@ -30,7 +30,7 @@ public class PhotoListFragment extends Fragment
     public static final int PHOTO_LIST_COLUMNS_NUM = 3;
 
     // Loader ID
-    public static final int PHOTO_LOADER_ID = 2;
+    public static final int PHOTO_LOADER_ID = 3;
 
     // Stores list of photos
     private List<PhotoListItem> mItems = new ArrayList<>();

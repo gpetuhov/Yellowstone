@@ -5,15 +5,16 @@ import android.database.Cursor;
 
 import com.gpetuhov.android.yellowstone.data.YellowstoneContract.QuakeEntry;
 
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
-// Stores information about one earthquake
-public class Quake {
-
-    // ID of the earthquake in the database table of this app
-    private long dbId;
+// Stores information about one earthquake.
+// Implements Serializable to be passed between activities and fragments.
+public class Quake implements Serializable {
 
     // ID of the earthquake that comes from USGS server
     private String mId;
@@ -55,10 +56,34 @@ public class Quake {
         // Create new Quake object with data extracted from a cursor row
         Quake quake = new Quake(ids, magnitude, location, time, url, latitude, longitude, depth);
 
-        // Set ID of the earthquake in the database table
-        quake.setDbId(cursor.getLong(cursor.getColumnIndex(QuakeEntry._ID)));
-
         return quake;
+    }
+
+    // Return list of quakes from cursor
+    public static List<Quake> getQuakeListFromCursor(Cursor cursor) {
+        // Create new empty list of quakes
+        List<Quake> quakes = new ArrayList<>();
+
+        // If the cursor is null, return empty list of quakes
+        if (null == cursor) {
+            return quakes;
+        }
+
+        // Move to the first row of the cursor
+        cursor.moveToFirst();
+
+        // While we didn't move after the last row of the cursor
+        while (!cursor.isAfterLast()) {
+            // Extract Quake object from the cursor row and add it to list of quakes
+            quakes.add(getQuakeFromCursor(cursor));
+
+            // Move to the next row of the cursor
+            cursor.moveToNext();
+        }
+
+        return quakes;
+
+        // Do not close cursor, because cursor is managed by CursorLoader
     }
 
     public Quake(String id, double magnitude, String location, long timeInMilliseconds,
@@ -71,16 +96,6 @@ public class Quake {
         mLatitude = latitude;
         mLongitude = longitude;
         mDepth = depth;
-    }
-
-    // Return the ID of the earthquake in the database table
-    public long getDbId() {
-        return dbId;
-    }
-
-    // Set the ID of the earthquake in the database table
-    public void setDbId(long dbId) {
-        this.dbId = dbId;
     }
 
     // Return the ID of the earthquake

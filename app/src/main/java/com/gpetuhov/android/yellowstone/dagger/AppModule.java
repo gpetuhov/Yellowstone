@@ -7,9 +7,9 @@ import android.support.v7.preference.PreferenceManager;
 
 import com.gpetuhov.android.yellowstone.PhotoFetcher;
 import com.gpetuhov.android.yellowstone.QuakeFetcher;
+import com.gpetuhov.android.yellowstone.data.QuakeCursorLoaderFactory;
 import com.gpetuhov.android.yellowstone.utils.UtilsMap;
 import com.gpetuhov.android.yellowstone.utils.UtilsPrefs;
-import com.gpetuhov.android.yellowstone.utils.UtilsQuakeList;
 
 import javax.inject.Singleton;
 
@@ -61,19 +61,11 @@ public class AppModule {
         return utilsPrefs;
     }
 
-    // Returns instance of UtilsQuakeList
-    @Provides
-    @Singleton
-    UtilsQuakeList providesUtilsQuakeList(ContentResolver contentResolver) {
-        UtilsQuakeList utilsQuakeList = new UtilsQuakeList(contentResolver);
-        return utilsQuakeList;
-    }
-
     // Returns instance of UtilsMap
     @Provides
     @Singleton
-    UtilsMap providesUtilsMap(Application application, UtilsQuakeList utilsQuakeList) {
-        UtilsMap utilsMap = new UtilsMap(application, utilsQuakeList);
+    UtilsMap providesUtilsMap(Application application) {
+        UtilsMap utilsMap = new UtilsMap(application);
         return  utilsMap;
     }
 
@@ -110,5 +102,13 @@ public class AppModule {
     PhotoFetcher providesPhotoFetcher(OkHttpClient okHttpClient) {
         PhotoFetcher photoFetcher = new PhotoFetcher(okHttpClient);
         return photoFetcher;
+    }
+
+    // Returns instance of QuakeCursorLoaderFactory
+    @Provides
+    @Singleton
+    QuakeCursorLoaderFactory providesQuakeCursorLoaderFactory(Application application, UtilsPrefs utilsPrefs) {
+        QuakeCursorLoaderFactory quakeCursorLoaderFactory = new QuakeCursorLoaderFactory(application, utilsPrefs);
+        return quakeCursorLoaderFactory;
     }
 }
