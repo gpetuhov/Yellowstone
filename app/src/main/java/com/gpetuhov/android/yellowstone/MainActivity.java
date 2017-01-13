@@ -13,6 +13,12 @@ import com.gpetuhov.android.yellowstone.utils.UtilsPrefs;
 
 import javax.inject.Inject;
 
+import rx.Observable;
+import rx.Subscriber;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
+
 
 // Main activity with Tabs and ViewPager
 public class MainActivity extends VisibleActivity {
@@ -28,6 +34,9 @@ public class MainActivity extends VisibleActivity {
 
     // ViewPager for displaying main pages of the app
     private ViewPager mViewPager;
+
+    // Keeps subscription of RxJava Subscriber to Observable
+    private Subscription mSubscription;
 
     // Return new intent to start this activity
     public static Intent newIntent(Context context) {
@@ -87,25 +96,68 @@ public class MainActivity extends VisibleActivity {
         }
     }
 
-
-    // Update ViewPager position with last position stored in SharedPreferences
-    // (if a user returns from another activity, ViewPager opens
-    // last opened page instead of the starting page)
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Get last ViewPager position from SharedPreferences.
-        // If null, return default page number (starting page).
-        int position = mUtilsPrefs.getIntFromSharedPreferences(PREF_LAST_PAGE, DEFAULT_PAGE);
-
-        // Update ViewPager position with new value
-        mViewPager.setCurrentItem(position);
-
-        // Make activity recreate menu
-        invalidateOptionsMenu();
+        updateViewPagerPositionWithSavedValue();
     }
 
+    // Update ViewPager position with last position stored in SharedPreferences
+    // (if a user returns from another activity, ViewPager opens
+    // last opened page instead of the starting page).
+    // Read from SharedPreferences in background thread.
+    private void updateViewPagerPositionWithSavedValue() {
+        // Unsubscribe previous subscription
+        unsubscribeSubscription();
+
+        // Subscribe Subscriber to Observable and save subscription
+        mSubscription = Observable.create(new Observable.OnSubscribe<Integer>() {   // Create observable
+            // Method is called, when subscriber subscribes
+            @Override
+            public void call(Subscriber<? super Integer> subscriber) {
+                // Get last ViewPager position from SharedPreferences.
+                // If null, return default page number (starting page).
+                Integer position = mUtilsPrefs.getIntFromSharedPreferences(PREF_LAST_PAGE, DEFAULT_PAGE);
+
+                // Emit position to subscriber
+                subscriber.onNext(position);
+
+                // Observable finish emitting
+                subscriber.onCompleted();
+            }
+        })
+                .subscribeOn(Schedulers.io())   // Observable executes in background thread
+                .observeOn(AndroidSchedulers.mainThread())  // Subscriber executes in main thread
+                .subscribe(new Subscriber<Integer>() {  // Create subscriber
+                    @Override
+                    public void onCompleted() {
+                        // Do nothing
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        // Do nothing
+                    }
+
+                    @Override
+                    public void onNext(Integer position) {
+                        // Update ViewPager position with new value
+                        mViewPager.setCurrentItem(position);
+
+                        // Make activity recreate menu
+                        invalidateOptionsMenu();
+                    }
+                });
+    }
+
+    // Unsubscribe subscription
+    private void unsubscribeSubscription() {
+        if (null != mSubscription) {
+            if (!mSubscription.isUnsubscribed()) {
+                mSubscription.unsubscribe();
+            }
+        }
+    }
 
     // Create menu for main activity (each fragment can later add its items to this menu)
     @Override
@@ -157,5 +209,12 @@ public class MainActivity extends VisibleActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Unsubscribe subscription to prevent memory leaks
+        unsubscribeSubscription();
     }
 }
