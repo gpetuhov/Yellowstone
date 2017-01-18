@@ -1,9 +1,15 @@
 package com.gpetuhov.android.yellowstone;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.ShareActionProvider;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -46,6 +52,12 @@ public class QuakeFragment extends Fragment {
     // TextView for earthquake coordinates
     private TextView mQuakeCoordinatesTextView;
 
+    // Provides submenu for share button
+    private ShareActionProvider mShareActionProvider;
+
+    // Keeps data for sharing quake
+    private Intent mShareIntent;
+
     // Reference to Google Map
     private GoogleMap mGoogleMap;
 
@@ -76,12 +88,32 @@ public class QuakeFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
 
         // Inject UtilsQuakeList into this fragment
         YellowstoneApp.getAppComponent().inject(this);
 
         // Get quake from the fragment's arguments
         mQuake = (Quake) getArguments().getSerializable(ARG_KEY_QUAKE);
+
+        setupShareIntent();
+    }
+
+    // Store data from quake in share intent
+    private void setupShareIntent() {
+        if (null != mQuake) {
+            String textToShare =
+                    "New earthquake in Yellowstone: "
+                    + mQuake.getLocation() + ", "
+                    + "magnitude " + mQuake.getFormattedMagnitude() + ", "
+                    + mQuake.getFormattedDate()
+                    + " #YellowstoneCalderaMonitor "
+                    + mQuake.getUrl();
+            mShareIntent = new Intent();
+            mShareIntent.setAction(Intent.ACTION_SEND);
+            mShareIntent.setType("text/plain");
+            mShareIntent.putExtra(Intent.EXTRA_TEXT, textToShare);
+        }
     }
 
     @Override
@@ -160,6 +192,30 @@ public class QuakeFragment extends Fragment {
         });
 
         return v;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        // Inflate menu
+        inflater.inflate(R.menu.menu_quake, menu);
+
+        // Get menu item for share action
+        MenuItem shareItem = menu.findItem(R.id.action_share);
+
+        // Create new ShareActionProvider and override onCreateActionView
+        mShareActionProvider = new ShareActionProvider(getActivity()) {
+            @Override
+            public View onCreateActionView() {
+                // This is needed to remove second icon with share history from the menu
+                return null;
+            }
+        };
+
+        mShareActionProvider.setShareIntent(mShareIntent);
+
+        shareItem.setIcon(R.drawable.ic_share_white_24dp);
+
+        MenuItemCompat.setActionProvider(shareItem, mShareActionProvider);
     }
 
     // Callback must be forwarded for prover MapView lifecycle

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--Menu for Quake Fragment-->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!--Item - "Share" is shown in toolbar if there is room
+    (if not, it is shown in overflow menu)-->
+    <item
+        android:id="@+id/action_share"
+        android:title="@string/action_share"
+        app:showAsAction="ifRoom"
+        app:actionProviderClass=
+            "android.support.v7.widget.ShareActionProvider" />
+
+</menu>
